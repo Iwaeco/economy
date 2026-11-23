@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECOnomy &amp; Recipe Telemetry</title>
+<link rel="icon" type="image/png" href="icons/eco-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-canvas: #090c10;
+    --bg-surface: #0f141c;
+    --bg-elevated: #151c27;
+    --bg-hover: #1b2433;
+    --border-subtle: rgba(148, 163, 184, 0.14);
+    --border-strong: rgba(148, 163, 184, 0.26);
+    --text-primary: #f0f6fc;
+    --text-secondary: #9aa7b8;
+    --text-muted: #677486;
+    --accent-amber: #f59f00;
+    --accent-amber-soft: rgba(245, 159, 0, 0.14);
+    --accent-emerald: #2ea043;
+    --accent-mint: #57d675;
+    --accent-sky: #58a6ff;
+    --accent-rose: #f85149;
+    --radius-lg: 14px;
+    --radius-md: 10px;
+    --radius-sm: 7px;
+    --shadow-card: 0 18px 40px -16px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background:
+      radial-gradient(900px 420px at 50% -60px, rgba(245, 159, 0, 0.11), transparent 70%),
+      radial-gradient(700px 380px at 85% 15%, rgba(88, 166, 255, 0.07), transparent 65%),
+      var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app-shell {
+    width: 100%;
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 20px 22px 96px;
+  }
+
+  /* Top Command Strip */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    background: linear-gradient(180deg, rgba(21, 28, 39, 0.92), rgba(14, 19, 27, 0.96));
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 14px 20px;
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(10px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .brand-mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, rgba(245, 159, 0, 0.2), rgba(46, 160, 67, 0.14));
+    border: 1px solid rgba(245, 159, 0, 0.35);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .brand-mark img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+  }
+
+  .brand-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-kicker {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-amber);
+  }
+
+  .brand-name {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 1.15;
+  }
+
+  /* Server Slot Switcher & Inline Server Manager */
+  .server-cluster {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .server-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(9, 12, 16, 0.72);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 4px;
+  }
+
+  .srv-tab {
+    appearance: none;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.14s ease;
+    line-height: 1.2;
+  }
+
+  .srv-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .srv-tab.active {
+    background: linear-gradient(180deg, #399149, #296e35);
+    border-color: rgba(126, 231, 135, 0.45);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(46, 160, 67, 0.28);
+  }
+
+  .srv-ghost-add {
+    appearance: none;
+    border: 1px dashed rgba(148, 163, 184, 0.3);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 11px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+
+  .srv-ghost-add:hover {
+    border-style: solid;
+    border-color: var(--accent-mint);
+    color: var(--accent-mint);
+    background: rgba(46, 160, 67, 0.08);
+  }
+
+  .srv-inline-editor {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(9, 12, 16, 0.65);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 4px 6px;
+  }
+
+  .srv-rename-input {
+    width: 142px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 8px;
+    border-radius: 6px;
+    outline: none;
+  }
+
+  .srv-rename-input:focus {
+    border-color: var(--accent-sky);
+  }
+
+  .srv-action-btn {
+    appearance: none;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+
+  .srv-action-btn:hover {
+    border-color: var(--border-strong);
+    background: var(--bg-hover);
+  }
+
+  .srv-delete-btn {
+    appearance: none;
+    background: rgba(248, 81, 73, 0.08);
+    border: 1px solid rgba(248, 81, 73, 0.28);
+    color: #ff8b85;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+
+  .srv-delete-btn:hover {
+    background: rgba(248, 81, 73, 0.18);
+    border-color: var(--accent-rose);
+    color: #ffd1ce;
+  }
+
+  /* Guild / Profession Deck */
+  .guild-deck {
+    margin-top: 16px;
+    background: linear-gradient(180deg, rgba(19, 25, 36, 0.92), rgba(13, 18, 26, 0.96));
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .guild-rail {
+    display: grid;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  @media (max-width: 1180px) {
+    .guild-rail {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .guild-rail {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .guild-btn {
+    appearance: none;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 11px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+  }
+
+  .guild-btn:hover {
+    color: var(--text-primary);
+    border-color: rgba(245, 159, 0, 0.45);
+    background: var(--bg-elevated);
+  }
+
+  .guild-btn.active {
+    background: linear-gradient(180deg, rgba(245, 159, 0, 0.16), rgba(245, 159, 0, 0.05));
+    border-color: var(--accent-amber);
+    color: #ffd43b;
+    box-shadow: 0 0 0 1px rgba(245, 159, 0, 0.25), 0 8px 20px -10px rgba(245, 159, 0, 0.45);
+  }
+
+  .guild-btn img {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    image-rendering: auto;
+    backface-visibility: hidden;
+  }
+
+  /* Utility Strip inside Guild Deck (Base Items + MY SHOP + Telemetry) */
+  .guild-footer-strip {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .mode-pills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .mode-pill-btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+
+  .mode-pill-btn:hover {
+    border-color: var(--border-strong);
+    background: var(--bg-elevated);
+  }
+
+  .mode-pill-btn.active-base {
+    border-color: var(--accent-sky);
+    background: rgba(88, 166, 255, 0.12);
+    color: #9ecbff;
+  }
+
+  #shop-nav-btn.active {
+    border-color: var(--accent-emerald);
+    background: rgba(46, 160, 67, 0.16);
+    color: var(--accent-mint);
+  }
+
+  #shop-nav-btn img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+  }
+
+  .telemetry-chips {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .t-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(9, 12, 16, 0.65);
+    border: 1px solid var(--border-subtle);
+    padding: 5px 10px;
+    border-radius: 7px;
+  }
+
+  .t-chip strong {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-primary);
+    font-size: 12px;
+  }
+
+  /* Main Pricing Ledger Panel */
+  .panel {
+    margin-top: 16px;
+    background: linear-gradient(180deg, rgba(20, 27, 38, 0.95), rgba(13, 18, 26, 0.98));
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px 64px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .panel-head h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--accent-amber);
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .controls input[type="text"],
+  .controls select {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 7px 11px;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.14s ease;
+  }
+
+  .controls input[type="text"]:focus,
+  .controls select:focus {
+    border-color: var(--accent-amber);
+  }
+
+  .controls button:not(#shop-nav-btn) {
+    appearance: none;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+
+  .controls button:not(#shop-nav-btn):hover:not(:disabled) {
+    border-color: var(--border-strong);
+    background: var(--bg-elevated);
+  }
+
+  .controls button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Sub-Profession & Level Matrix */
+  .sub-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 10px;
+    margin: 12px 0 18px;
+  }
+
+  .sub-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 7px;
+    background: rgba(9, 12, 16, 0.58);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+
+  .sub-pill {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+
+  .sub-pill:hover {
+    border-color: var(--border-strong);
+    background: var(--bg-elevated);
+  }
+
+  .sub-pill.active {
+    border-color: var(--accent-amber);
+    background: var(--accent-amber-soft);
+    color: #ffd43b;
+  }
+
+  .sub-pill img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+  }
+
+  .sub-lvl-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .sub-lvl-box {
+    appearance: none;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s ease;
+  }
+
+  .sub-lvl-box:hover {
+    border-color: var(--accent-amber);
+    color: var(--text-primary);
+  }
+
+  .sub-lvl-box.active {
+    border-color: var(--accent-amber);
+    background: var(--accent-amber-soft);
+    color: #ffd43b;
+  }
+
+  /* Data Table */
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border-subtle);
+    background: rgba(9, 12, 16, 0.45);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.09);
+  }
+
+  th {
+    background: rgba(15, 20, 28, 0.95);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  tbody tr:hover {
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  thead th:nth-child(2),
+  #rows tr td:nth-child(2) {
+    white-space: nowrap;
+  }
+
+  thead th:nth-child(5),
+  #rows tr td:nth-child(5) {
+    text-align: center;
+  }
+
+  .cost {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-sky);
+  }
+
+  .cost input {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .price {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-mint);
+    font-weight: 700;
+  }
+
+  .ing-link {
+    color: #9ecbff;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .ing-link:hover {
+    color: #ffd43b;
+    text-decoration-style: solid;
+  }
+
+  .ing-muted {
+    color: var(--text-muted);
+  }
+
+  .th-shop-col, .td-shop-col {
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .shop-col-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(248, 81, 73, 0.55);
+    background: rgba(248, 81, 73, 0.14);
+    color: #ff8b85;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+
+  .shop-col-btn:hover {
+    transform: scale(1.06);
+  }
+
+  .shop-col-btn.in-shop {
+    border-color: rgba(87, 214, 117, 0.6);
+    background: rgba(46, 160, 67, 0.22);
+    color: var(--accent-mint);
+  }
+
+  tr.shop-filtered-hidden {
+    display: none !important;
+  }
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="icons/eco-logo.png" alt="ECOnomy">
+        </div>
+        <div class="brand-titles">
+          <span class="brand-kicker">ECOnomy WORKBENCH</span>
+          <span class="brand-name">My Shop &amp; Recipes</span>
+        </div>
+      </div>
+
+      <div class="server-cluster">
+        <div id="server-bar" class="server-tabs" aria-label="Server Slots"></div>
+        <div id="server-controls-bar" class="srv-inline-editor" aria-label="Server Controls"></div>
+      </div>
+    </header>
+
+    <section class="guild-deck" aria-label="Profession Guilds">
+      <div class="guild-rail" id="guild-rail">
+        <button type="button" class="guild-btn active" data-prof="carpenter" onclick="pick('carpenter')">
+          <img src="icons/48px-CarpenterSkill_Icon.png" alt="Carpenter">
+          <span>CARPENTER</span>
+        </button>
+        <button type="button" class="guild-btn" data-prof="smith" onclick="pick('smith')">
+          <img src="icons/48px-SmithSkill_Icon.png" alt="Smith">
+          <span>SMITH</span>
+        </button>
+        <button type="button" class="guild-btn" data-prof="mason" onclick="pick('mason')">
+          <img src="icons/48px-MasonSkill_Icon.png" alt="Mason">
+          <span>MASON</span>
+        </button>
+        <button type="button" class="guild-btn" data-prof="chef" onclick="pick('chef')">
+          <img src="icons/48px-ChefSkill_Icon.png" alt="Chef">
+          <span>CHEF</span>
+        </button>
+        <button type="button" class="guild-btn" data-prof="survivalist" onclick="pick('survivalist')">
+          <img src="icons/48px-SurvivalistSkill_Icon.png" alt="Survivalist">
+          <span>SURVIVALIST</span>
+        </button>
+        <button type="button" class="guild-btn" data-prof="farmer" onclick="pick('farmer')">
+          <img src="icons/48px-FarmerSkill_Icon.png" alt="Farmer">
+          <span>FARMER</span>
+        </button>
+        <button type="button" class="guild-btn" data-prof="hunter" onclick="pick('hunter')">
+          <img src="icons/48px-HunterSkill_Icon.png" alt="Hunter">
+          <span>HUNTER</span>
+        </button>
+        <button type="button" class="guild-btn" data-prof="engineer" onclick="pick('engineer')">
+          <img src="icons/48px-EngineerSkill_Icon.png" alt="Engineer">
+          <span>ENGINEER</span>
+        </button>
+        <button type="button" class="guild-btn" data-prof="scientist" onclick="pick('scientist')">
+          <img src="icons/48px-ScientistSkill_Icon.png" alt="Scientist">
+          <span>SCIENTIST</span>
+        </button>
+      </div>
+
+      <div class="guild-footer-strip">
+        <div class="mode-pills" id="guild-mode-pills">
+          <button type="button" id="btn-base-items" class="mode-pill-btn" onclick="pick('base_items')">Base Items</button>
+          <button type="button" id="shop-nav-btn" class="mode-pill-btn" title="Show MY SHOP items"><img src="icons/48px-StoreItem_Icon.webp" alt="Shop"><span>MY SHOP</span></button>
+        </div>
+        <div class="telemetry-chips" id="ledger-telemetry">
+          <div class="t-chip"><span>Showing</span><strong id="stat-visible-count">0</strong></div>
+          <div class="t-chip"><span>Custom Costs</span><strong id="stat-custom-count">0</strong></div>
+          <div class="t-chip"><span>Shop Stock</span><strong id="stat-shop-count">0</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <main class="panel">
+      <div class="panel-head">
+        <h2 id="title">Carpenter Profession</h2>
+        <div class="controls">
+          <button type="button" id="btn-clear-prices" onclick="if (confirm('Are you sure you want to clear all prices?')) { clearAllPrices(); }" style="background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.55);color:#ff8b85;">Clear All Prices</button>
+          <input type="text" id="q" placeholder="Filter recipes or items..." oninput="if (typeof window.__recordNavSnapshot === 'function') window.__recordNavSnapshot(); draw()">
+          <select id="pct" onchange="recalcAllVisibleSellPrices()">
+            <option value="0">0% Profit</option>
+            <option value="0.05">5% Profit</option>
+            <option value="0.10">10% Profit</option>
+            <option value="0.15">15% Profit</option>
+            <option value="0.20" selected>20% Profit</option>
+            <option value="0.25">25% Profit</option>
+            <option value="0.30">30% Profit</option>
+            <option value="0.40">40% Profit</option>
+            <option value="0.50">50% Profit</option>
+            <option value="0.75">75% Profit</option>
+            <option value="1.00">100% Profit</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Specialty</th>
+              <th>Ingredients</th>
+              <th>Base Cost</th>
+              <th>Sale Price</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+<script src="town_data.js"></script>
+<script>
+let cur = 'carpenter';
+const DB = (window.RECIPE_DATA && Object.keys(window.RECIPE_DATA).length) ? window.RECIPE_DATA : {
+  carpenter: { title: "Carpenter Profession", items: [
+    { n: "Dowel (each)", s: "Logging Lv 1", i: "2x Wood Log -> 16 Dowels", c: 2.50 },
+    { n: "Hewn Log", s: "Logging Lv 1", i: "2x Wood Log + 2x Dowel", c: 45.00 },
+    { n: "Wood Board", s: "Carpentry Lv 1", i: "1x Hewn Log -> 2 Boards", c: 22.50 }
+  ]},
+  smith: { title: "Smith Profession", items: [
+    { n: "Iron Bar", s: "Smelting Lv 1", i: "1x Iron Conc. + 1x Clay Mold -> 4", c: 14.50 },
+    { n: "Nail", s: "Blacksmith Lv 1", i: "1x Iron Bar -> 16 Nails", c: 0.91 },
+    { n: "Steel Bar", s: "Advanced Smelting Lv 1", i: "Iron Conc. + Ceramic Mold + Quicklime + Coal -> 4", c: 34.00 }
+  ]},
+  mason: { title: "Mason Profession", items: [
+    { n: "Crushed Stone", s: "Mining Lv 1", i: "12x Rock -> 3 Crushed Rock", c: 4.00 },
+    { n: "Mortar", s: "Masonry Lv 1", i: "4x Stone -> 3 Mortar", c: 1.33 },
+    { n: "Mortared Stone", s: "Masonry Lv 1", i: "4x Stone + 1x Mortar", c: 5.33 }
+  ]},
+  chef: { title: "Chef Profession", items: [
+    { n: "Charred Meat", s: "Campfire Cooking Lv 1", i: "1x Raw Meat", c: 6.00 },
+    { n: "Flatbread", s: "Baking Lv 1", i: "2x Flour", c: 5.50 }
+  ]},
+  survivalist: { title: "Survivalist Profession", items: [
+    { n: "Adobe", s: "No Skill", i: "1x Dirt + 1x Wood -> 4", c: 5.25 },
+    { n: "Workbench", s: "No Skill", i: "10x Wood + 4x Rock", c: 204.00 }
+  ]},
+  farmer: { title: "Farmer Profession", items: [
+    { n: "Flour", s: "Milling Lv 1", i: "2x Wheat -> 1 Flour", c: 2.75 },
+    { n: "Flaxseed Oil", s: "Milling Lv 1", i: "4x Flaxseed -> 1 Oil", c: 8.00 }
+  ]},
+  hunter: { title: "Hunter Profession", items: [
+    { n: "Raw Meat", s: "Butchery Lv 1", i: "1x Carcass -> 6 Meat + 2 Hide", c: 6.00 },
+    { n: "Wool Fabric", s: "Tailoring Lv 1", i: "4x Wool Yarn -> 1 Fabric", c: 15.00 }
+  ]},
+  engineer: { title: "Engineer Profession", items: [
+    { n: "Stone Road", s: "Basic Engineering Lv 1", i: "3x Mortar + 2x Crushed Rock", c: 12.00 },
+    { n: "Iron Gear", s: "Mechanics Lv 1", i: "2x Iron Bar", c: 29.00 }
+  ]},
+  scientist: { title: "Scientist Profession", items: [
+    { n: "Gasoline", s: "Oil Drilling Lv 2", i: "4x Petroleum", c: 60.00 },
+    { n: "Epoxy", s: "Oil Drilling Lv 3", i: "2x Petroleum + 1x Resin", c: 34.00 },
+    { n: "Plastic", s: "Oil Drilling Lv 4", i: "2x Petroleum + 2x Epoxy", c: 98.00 }
+  ]}
+};
+
+function setArtisanSelection(k) {
+  document.querySelectorAll('.guild-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-prof') === k);
+  });
+}
+
+function refreshTelemetryChips() {
+  const visEl = document.getElementById('stat-visible-count');
+  const custEl = document.getElementById('stat-custom-count');
+  const shopEl = document.getElementById('stat-shop-count');
+  if (visEl) {
+    const rows = Array.from(document.querySelectorAll('#rows tr'));
+    const shown = rows.filter(tr => !tr.classList.contains('shop-filtered-hidden') && tr.style.display !== 'none').length;
+    visEl.textContent = String(shown);
+  }
+  if (custEl) {
+    const cnt = (window.__CUSTOM_COSTS__ instanceof Map) ? window.__CUSTOM_COSTS__.size : 0;
+    custEl.textContent = String(cnt);
+  }
+  if (shopEl) {
+    const list = typeof window.__getActiveServerShop === 'function' ? window.__getActiveServerShop() : [];
+    shopEl.textContent = String(list.length);
+  }
+}
+
+function pick(k, opts = {}) {
+  const recordNav = !opts.skipHistory;
+  if (recordNav && typeof window.__recordNavSnapshot === 'function') {
+    window.__recordNavSnapshot();
+  }
+  if (typeof fullDbItems !== 'undefined') {
+    if (typeof currentProfKey !== 'undefined' && currentProfKey && fullDbItems[currentProfKey]) {
+      DB[currentProfKey].items = fullDbItems[currentProfKey].slice();
+    }
+    currentProfKey = k;
+    activeSubKey = opts.subKey !== undefined ? opts.subKey : null;
+    activeSubLevel = opts.subLevel !== undefined ? opts.subLevel : null;
+    if (typeof renderSubPills === 'function') renderSubPills(k);
+  }
+  if (k === 'base_items') {
+    if (cur === 'base_items' && !opts.keepBase) {
+      const returnProf = (typeof currentProfKey === 'string' && currentProfKey && currentProfKey !== 'base_items')
+        ? currentProfKey
+        : 'carpenter';
+      pick(returnProf, opts);
+      return;
+    }
+    if (typeof activeSubKey !== 'undefined' && opts.subKey === undefined) activeSubKey = null;
+    if (typeof activeSubLevel !== 'undefined' && opts.subLevel === undefined) activeSubLevel = null;
+    const qEl = document.getElementById('q');
+    if (qEl && !opts.preserveQ) qEl.value = '';
+    if (Array.isArray(window.BASE_ITEMS) && window.BASE_ITEMS.length && !DB.base_items) {
+      DB.base_items = { title: "Base Items — Raw & Harvested Materials", items: window.BASE_ITEMS };
+    }
+    cur = 'base_items';
+    setArtisanSelection(null);
+    if (typeof renderSubPills === 'function') renderSubPills('base_items');
+    draw();
+    return;
+  }
+  cur = k;
+  setArtisanSelection(k);
+  const qEl = document.getElementById('q');
+  if (qEl && !opts.preserveQ) qEl.value = '';
+  draw();
+}
+
+function fmtLvl(s) {
+  const m = String(s || "").match(/ Lv\s*(\d+) /i);
+  return m ? "Level " + m[1] : String(s || "");
+}
+
+function normalizeItemKey(name) {
+  return String(name || '').trim().toLowerCase();
+}
+
+function onRowCostInput(inp, idx) {
+  const raw = String(inp.value || '').trim();
+  const itemName = decodeURIComponent(inp.getAttribute('data-item-enc') || '');
+  const key = normalizeItemKey(itemName);
+  if (!(window.__CUSTOM_COSTS__ instanceof Map)) {
+    window.__CUSTOM_COSTS__ = new Map();
+  }
+  if (raw === '') {
+    window.__CUSTOM_COSTS__.delete(key);
+  } else {
+    const parsed = parseFloat(raw);
+    if (Number.isFinite(parsed)) {
+      window.__CUSTOM_COSTS__.set(key, parsed);
+    }
+  }
+  if (typeof window.__persistActiveServerCosts === 'function') {
+    window.__persistActiveServerCosts();
+  }
+  recalcAllVisibleRows(inp);
+  refreshTelemetryChips();
+}
+
+function getAllItemsCatalog() {
+  const map = new Map();
+  if (typeof DB !== 'undefined' && DB) {
+    Object.keys(DB).forEach(profKey => {
+      const src = (typeof fullDbItems !== 'undefined' && Array.isArray(fullDbItems[profKey]))
+        ? fullDbItems[profKey]
+        : (Array.isArray(DB[profKey] && DB[profKey].items) ? DB[profKey].items : []);
+      src.forEach(it => {
+        const k = normalizeItemKey(it && it.n);
+        if (k && !map.has(k)) map.set(k, it);
+      });
+    });
+  }
+  if (Array.isArray(window.BASE_ITEMS)) {
+    window.BASE_ITEMS.forEach(it => {
+      const k = normalizeItemKey(it && it.n);
+      if (k && !map.has(k)) map.set(k, it);
+    });
+  }
+  return map;
+}
+
+function parseRecipeParts(recipeStr) {
+  const raw = String(recipeStr || '').trim();
+  if (!raw || raw.toLowerCase() === 'base / special') return [];
+  return raw.split(/\s*\+\s*/).map(seg => {
+    const s = seg.trim();
+    const isTag = /\(tag\)\s*$/i.test(s);
+    const qtyMatch = s.match(/^(\d+(?:\.\d+)?)\s*x\s+/i);
+    const qty = qtyMatch ? parseFloat(qtyMatch[1]) : 1;
+    const cleanName = s
+      .replace(/^\d+(?:\.\d+)?\s*x\s+/i, '')
+      .replace(/\s*\(tag\)\s*$/i, '')
+      .trim();
+    return { qty: Number.isFinite(qty) ? qty : 1, name: cleanName, isTag };
+  }).filter(p => p.name);
+}
+
+function computeTagRollupCost(tagName, catalog, visited) {
+  const entry = typeof resolveTagEntries === 'function' ? resolveTagEntries(tagName) : null;
+  const members = entry && Array.isArray(entry.items) ? entry.items : [];
+  if (!members.length) return 0;
+
+  const prices = [];
+  members.forEach(memberName => {
+    const k = normalizeItemKey(memberName);
+    if (!k) return;
+    const hasOverride = window.__CUSTOM_COSTS__ && window.__CUSTOM_COSTS__.has(k);
+    const memberObj = catalog.get(k);
+    let val = 0;
+    if (hasOverride) {
+      val = window.__CUSTOM_COSTS__.get(k);
+    } else if (memberObj) {
+      val = computeItemCost(memberObj, catalog, new Set(visited));
+    }
+    if (Number.isFinite(val) && val > 0) prices.push(val);
+  });
+
+  if (!prices.length) return 0;
+  return Math.min(...prices);
+}
+
+function computeItemCost(itemObj, catalog, visited = new Set()) {
+  if (!itemObj) return 0;
+  const key = normalizeItemKey(itemObj.n);
+  if (key && window.__CUSTOM_COSTS__ && window.__CUSTOM_COSTS__.has(key)) {
+    const ov = window.__CUSTOM_COSTS__.get(key);
+    return Number.isFinite(ov) ? ov : 0;
+  }
+
+  if (key && visited.has(key)) return Number(itemObj.c) || 0;
+  const nextVisited = new Set(visited);
+  if (key) nextVisited.add(key);
+
+  const parts = parseRecipeParts(itemObj.i);
+  if (parts.length > 0) {
+    let total = 0;
+    let anyResolved = false;
+    for (const part of parts) {
+      if (part.isTag) {
+        const tCost = computeTagRollupCost(part.name, catalog, nextVisited);
+        if (tCost > 0) anyResolved = true;
+        total += part.qty * tCost;
+      } else {
+        const ingKey = normalizeItemKey(part.name);
+        const ingObj = catalog.get(ingKey);
+        const ingHasOverride = window.__CUSTOM_COSTS__ && window.__CUSTOM_COSTS__.has(ingKey);
+        const ingCost = ingObj
+          ? computeItemCost(ingObj, catalog, nextVisited)
+          : (ingHasOverride ? window.__CUSTOM_COSTS__.get(ingKey) : 0);
+        if (ingCost > 0 || ingHasOverride) anyResolved = true;
+        total += part.qty * (Number.isFinite(ingCost) ? ingCost : 0);
+      }
+    }
+    if (anyResolved) return Number(total.toFixed(4));
+  }
+
+  return Number(itemObj.c) || 0;
+}
+
+function recalcAllVisibleRows(activeInputEl) {
+  const m = parseFloat(document.getElementById('pct').value) || 0;
+  const catalog = getAllItemsCatalog();
+
+  document.querySelectorAll('#rows input[data-row-idx]').forEach(inp => {
+    const idx = inp.getAttribute('data-row-idx');
+    const itemName = decodeURIComponent(inp.getAttribute('data-item-enc') || '');
+    const key = normalizeItemKey(itemName);
+    const hasOverride = window.__CUSTOM_COSTS__ && window.__CUSTOM_COSTS__.has(key);
+    const itemObj = catalog.get(key) || { n: itemName, c: 0, i: '' };
+    const computedCost = computeItemCost(itemObj, catalog, new Set());
+
+    if (inp !== activeInputEl) {
+      if (hasOverride) {
+        const ovVal = window.__CUSTOM_COSTS__.get(key);
+        const curText = String(inp.value || '').trim();
+        if (parseFloat(curText) !== ovVal) {
+          inp.value = ovVal === 0 ? '' : String(ovVal);
+        }
+      } else {
+        inp.value = computedCost > 0 ? String(Number(computedCost.toFixed(2))) : '';
+      }
+    }
+
+    const sellEl = document.getElementById('sell-' + idx);
+    if (sellEl) {
+      sellEl.textContent = '$' + (computedCost * (1 + m)).toFixed(2);
+    }
+  });
+}
+
+function clearAllPrices() {
+  window.__CUSTOM_COSTS__ = new Map();
+  if (typeof DB !== "undefined" && DB) {
+    Object.keys(DB).forEach(profKey => {
+      const sec = DB[profKey];
+      if (sec && Array.isArray(sec.items)) sec.items.forEach(it => { if (it) it.c = 0; });
+    });
+  }
+  if (typeof fullDbItems !== "undefined" && fullDbItems) {
+    Object.keys(fullDbItems).forEach(profKey => {
+      if (Array.isArray(fullDbItems[profKey])) fullDbItems[profKey].forEach(it => { if (it) it.c = 0; });
+    });
+  }
+  if (Array.isArray(window.BASE_ITEMS)) {
+    window.BASE_ITEMS.forEach(it => { if (it) it.c = 0; });
+  }
+  if (typeof window.__persistActiveServerCosts === 'function') {
+    window.__persistActiveServerCosts();
+  }
+  draw();
+}
+
+function recalcAllVisibleSellPrices() {
+  recalcAllVisibleRows(null);
+}
+
+function draw() {
+  if (!(window.__CUSTOM_COSTS__ instanceof Map)) {
+    window.__CUSTOM_COSTS__ = new Map();
+  }
+  const p = DB[cur] || DB.carpenter;
+  const qEl = document.getElementById('q');
+  const rawQ = qEl ? qEl.value.trim() : '';
+  const q = rawQ.toLowerCase();
+  const m = parseFloat(document.getElementById('pct').value) || 0;
+  const catalog = getAllItemsCatalog();
+  const baseBtn = document.getElementById('btn-base-items');
+  if (baseBtn) {
+    baseBtn.classList.toggle('active-base', cur === 'base_items');
+  }
+
+  const exactItem = window.__EXACT_ITEM_FILTER__;
+  const activeTag = window.__ACTIVE_TAG_FILTER__;
+
+  if (exactItem) {
+    document.getElementById('title').textContent = exactItem.label;
+  } else if (activeTag) {
+    document.getElementById('title').textContent = `Tag: ${activeTag.label}`;
+  } else if (q) {
+    document.getElementById('title').textContent = `Search Results — "${rawQ}"`;
+  } else {
+    document.getElementById('title').textContent = p.title;
+  }
+
+  let pool = [];
+  if (exactItem) {
+    Object.keys(DB || {}).forEach(k => {
+      const src = (typeof fullDbItems !== 'undefined' && Array.isArray(fullDbItems[k]) && fullDbItems[k].length)
+        ? fullDbItems[k]
+        : ((DB[k] && Array.isArray(DB[k].items)) ? DB[k].items : []);
+      src.forEach(it => {
+        if (it && normalizeItemKey(it.n) === exactItem.exactLower) {
+          pool.push(it);
+        }
+      });
+    });
+  } else if (activeTag) {
+    Object.keys(DB || {}).forEach(k => {
+      const src = (typeof fullDbItems !== 'undefined' && Array.isArray(fullDbItems[k]) && fullDbItems[k].length)
+        ? fullDbItems[k]
+        : ((DB[k] && Array.isArray(DB[k].items)) ? DB[k].items : []);
+      src.forEach(it => {
+        if (it && activeTag.namesLower.has(normalizeItemKey(it.n))) {
+          pool.push(it);
+        }
+      });
+    });
+  } else if (q) {
+    Object.keys(DB || {}).forEach(k => {
+      const src = (typeof fullDbItems !== 'undefined' && Array.isArray(fullDbItems[k]) && fullDbItems[k].length)
+        ? fullDbItems[k]
+        : ((DB[k] && Array.isArray(DB[k].items)) ? DB[k].items : []);
+      src.forEach(it => {
+        if (it && normalizeItemKey(it.n).includes(q)) {
+          pool.push(it);
+        }
+      });
+    });
+  } else {
+    pool = Array.isArray(p.items) ? p.items : [];
+  }
+
+  const seenRowNames = new Set();
+  const list = pool.filter(x => {
+    const k = normalizeItemKey(x && x.n);
+    if (!k) return true;
+    if (seenRowNames.has(k)) return false;
+    seenRowNames.add(k);
+    return true;
+  });
+
+  document.getElementById('rows').innerHTML = list.map((x, idx) => {
+    const costVal = computeItemCost(x, catalog, new Set());
+    const sellVal = costVal * (1 + m);
+    const dispVal = costVal === 0 ? '' : Number(costVal.toFixed(2));
+    const encName = encodeURIComponent(String(x.n || ''));
+    return `<tr><td style="min-width:170px;"><strong>${x.n}</strong></td><td style="white-space:nowrap;">${fmtLvl(x.s)}</td><td style="min-width:220px;">${formatClickableIngredients(x.i)}</td><td class="cost" style="white-space:nowrap;"><span style="display:inline-flex;align-items:center;gap:4px;"><span>$</span><input type="text" inputmode="decimal" maxlength="7" placeholder="0" value="${dispVal}" data-row-idx="${idx}" data-item-enc="${encName}" oninput="onRowCostInput(this, ${idx})" style="width:68px;background:#090c10;border:1px solid rgba(148,163,184,0.22);color:#58a6ff;font-weight:700;padding:4px 6px;border-radius:6px;box-sizing:border-box;"></span></td><td class="price" id="sell-${idx}">$${sellVal.toFixed(2)}</td></tr>`;
+  }).join('');
+
+  refreshTelemetryChips();
+}
+
+const SUB_PROFESSIONS = {
+  carpenter: [
+    { key: "Logging", label: "Logging", icon: "icons/32px-LoggingSkill_Icon.png" },
+    { key: "Carpentry", label: "Carpentry", icon: "icons/32px-CarpentrySkill_Icon.png" },
+    { key: "Paper Milling", label: "Paper Milling", icon: "icons/32px-PaperMillingSkill_Icon.png" },
+    { key: "Shipwright", label: "Shipwright", icon: "icons/32px-ShipwrightSkill_Icon.png" }
+  ],
+  smith: [
+    { key: "Smelting", label: "Smelting", icon: "icons/32px-SmeltingSkill_Icon.png" },
+    { key: "Blacksmith", label: "Blacksmith", icon: "icons/32px-BlacksmithSkill_Icon.png" },
+    { key: "Advanced Smelting", label: "Advanced Smelting", icon: "icons/32px-AdvancedSmeltingSkill_Icon.png" }
+  ],
+  mason: [
+    { key: "Masonry", label: "Masonry", icon: "icons/32px-MasonrySkill_Icon.png" },
+    { key: "Advanced Masonry", label: "Advanced Masonry", icon: "icons/32px-AdvancedMasonrySkill_Icon.png" },
+    { key: "Mining", label: "Mining", icon: "icons/32px-MiningSkill_Icon.png" },
+    { key: "Glassworking", label: "Glassworking", icon: "icons/32px-GlassworkingSkill_Icon.png" },
+    { key: "Pottery", label: "Pottery", icon: "icons/32px-PotterySkill_Icon.png" }
+  ],
+  chef: [
+    { key: "Campfire Cooking", label: "Campfire Cooking", icon: "icons/32px-CampfireCookingSkill_Icon.png" },
+    { key: "Cooking", label: "Cooking", icon: "icons/32px-CookingSkill_Icon.png" },
+    { key: "Baking", label: "Baking", icon: "icons/32px-BakingSkill_Icon.png" },
+    { key: "Advanced Baking", label: "Advanced Baking", icon: "icons/32px-AdvancedBakingSkill_Icon.png" },
+    { key: "Cutting Edge Cooking", label: "Cutting Edge Cooking", icon: "icons/32px-CuttingEdgeCookingSkill_Icon.png" }
+  ],
+  survivalist: [
+    { key: "No Skill", label: "No Skill", icon: null },
+    { key: "Gathering", label: "Gathering", icon: "icons/32px-GatheringSkill_Icon.png" },
+    { key: "Recycling", label: "Recycling", icon: "icons/32px-RecyclingSkill_Icon.png" },
+    { key: "Self Improvement", label: "Self Improvement", icon: "icons/32px-SelfImprovementSkill_Icon.png" }
+  ],
+  farmer: [
+    { key: "Farming", label: "Farming", icon: "icons/32px-FarmingSkill_Icon.png" },
+    { key: "Milling", label: "Milling", icon: "icons/32px-MillingSkill_Icon.png" },
+    { key: "Fertilizers", label: "Fertilizers", icon: "icons/32px-FertilizersSkill_Icon.png" }
+  ],
+  hunter: [
+    { key: "Hunting", label: "Hunting", icon: "icons/32px-HuntingSkill_Icon.png" },
+    { key: "Butchery", label: "Butchery", icon: "icons/32px-ButcherySkill_Icon.png" },
+    { key: "Tailoring", label: "Tailoring", icon: "icons/32px-TailoringSkill_Icon.png" }
+  ],
+  engineer: [
+    { key: "Basic Engineering", label: "Basic Engineering", icon: "icons/32px-BasicEngineeringSkill_Icon.png" },
+    { key: "Mechanics", label: "Mechanics", icon: "icons/32px-MechanicsSkill_Icon.png" },
+    { key: "Electronics", label: "Electronics", icon: "icons/32px-ElectronicsSkill_Icon.png" },
+    { key: "Industry", label: "Industry", icon: "icons/32px-IndustrySkill_Icon.png" },
+    { key: "Composites", label: "Composites", icon: "icons/32px-CompositesSkill_Icon.png" }
+  ],
+  scientist: [
+    { key: "Oil Drilling", label: "Oil Drilling", icon: "icons/32px-OilDrillingSkill_Icon.png" },
+    { key: "Painting", label: "Painting", icon: "icons/32px-PaintingSkill_Icon.png" }
+  ]
+};
+
+let activeSubKey = null;
+let activeSubLevel = null;
+let currentProfKey = 'carpenter';
+if (Array.isArray(window.BASE_ITEMS) && window.BASE_ITEMS.length && !DB.base_items) {
+  DB.base_items = { title: "Base Items — Raw & Harvested Materials", items: window.BASE_ITEMS };
+}
+const fullDbItems = {};
+Object.keys(DB).forEach(k => {
+  fullDbItems[k] = Array.isArray(DB[k].items) ? DB[k].items.slice() : [];
+});
+
+function normalizeSpecName(specStr) {
+  return String(specStr || "").replace(/\s+Lv\s+.*$/i, "").trim().toLowerCase();
+}
+
+function extractSpecLevel(specStr) {
+  const m = String(specStr || "").match(/ Lv\s*(\d+)/i);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+function getLevelsForSub(profKey, subKey) {
+  const items = fullDbItems[profKey] || [];
+  const targetSpec = String(subKey || "").trim().toLowerCase();
+  const levels = new Set();
+  items.forEach(it => {
+    if (normalizeSpecName(it.s) === targetSpec) {
+      const lv = extractSpecLevel(it.s);
+      if (lv !== null) levels.add(lv);
+    }
+  });
+  const sorted = Array.from(levels).sort((a, b) => a - b);
+  return sorted.length ? sorted : [1, 2, 3, 4, 5, 6, 7];
+}
+
+function applySubFilter(profKey, skipHistory = false) {
+  if (!skipHistory && typeof window.__recordNavSnapshot === 'function') {
+    window.__recordNavSnapshot();
+  }
+  if (!fullDbItems[profKey]) return;
+  const targetSpec = activeSubKey ? activeSubKey.trim().toLowerCase() : null;
+  DB[profKey].items = fullDbItems[profKey].filter(it => {
+    if (targetSpec && normalizeSpecName(it.s) !== targetSpec) return false;
+    if (activeSubLevel !== null && extractSpecLevel(it.s) !== activeSubLevel) return false;
+    return true;
+  });
+  renderSubPills(profKey);
+  draw();
+}
+
+function renderSubPills(profKey) {
+  const panel = document.querySelector(".panel");
+  if (!panel) return;
+  let bar = document.getElementById("sub-pill-bar");
+  const subs = SUB_PROFESSIONS[profKey];
+  if (!subs || !subs.length) {
+    if (bar) bar.remove();
+    return;
+  }
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.id = "sub-pill-bar";
+    bar.className = "sub-bar";
+    const wrap = panel.querySelector(".table-wrap") || panel.querySelector("table");
+    if (wrap) panel.insertBefore(bar, wrap);
+    else panel.appendChild(bar);
+  }
+  bar.innerHTML = "";
+
+  const allBtn = document.createElement("button");
+  allBtn.type = "button";
+  allBtn.className = "sub-pill" + (activeSubKey === null && activeSubLevel === null ? " active" : "");
+  allBtn.textContent = "View All";
+  allBtn.onclick = () => {
+    window.__EXACT_ITEM_FILTER__ = null;
+    window.__ACTIVE_TAG_FILTER__ = null;
+    const qEl = document.getElementById("q");
+    if (qEl) qEl.value = "";
+    activeSubKey = null;
+    activeSubLevel = null;
+    applySubFilter(profKey);
+  };
+  bar.appendChild(allBtn);
+
+  subs.forEach(sub => {
+    const col = document.createElement("div");
+    col.className = "sub-col";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "sub-pill" + (activeSubKey === sub.key ? " active" : "");
+    if (sub.icon) {
+      const iconEl = document.createElement("img");
+      iconEl.src = sub.icon;
+      iconEl.alt = sub.label;
+      btn.appendChild(iconEl);
+    }
+    btn.appendChild(document.createTextNode(sub.label));
+    btn.onclick = () => {
+      window.__EXACT_ITEM_FILTER__ = null;
+      window.__ACTIVE_TAG_FILTER__ = null;
+      const qEl = document.getElementById("q");
+      if (qEl) qEl.value = "";
+      if (activeSubKey === sub.key) {
+        activeSubKey = null;
+        activeSubLevel = null;
+      } else {
+        activeSubKey = sub.key;
+        activeSubLevel = null;
+      }
+      applySubFilter(profKey);
+    };
+    col.appendChild(btn);
+
+    const lvlRow = document.createElement("div");
+    lvlRow.className = "sub-lvl-row";
+    getLevelsForSub(profKey, sub.key).forEach(lv => {
+      const lvBox = document.createElement("button");
+      lvBox.type = "button";
+      const isLvActive = (activeSubKey === sub.key && activeSubLevel === lv) || (activeSubKey === null && activeSubLevel === lv);
+      lvBox.className = "sub-lvl-box" + (isLvActive ? " active" : "");
+      lvBox.textContent = String(lv);
+      lvBox.title = `${sub.label} Lv ${lv}`;
+      lvBox.onclick = (ev) => {
+        ev.stopPropagation();
+        window.__EXACT_ITEM_FILTER__ = null;
+        window.__ACTIVE_TAG_FILTER__ = null;
+        const qEl = document.getElementById("q");
+        if (qEl) qEl.value = "";
+        if (activeSubKey === sub.key && activeSubLevel === lv) {
+          activeSubLevel = null;
+        } else {
+          activeSubKey = sub.key;
+          activeSubLevel = lv;
+        }
+        applySubFilter(profKey);
+      };
+      lvlRow.appendChild(lvBox);
+    });
+    col.appendChild(lvlRow);
+    bar.appendChild(col);
+  });
+}
+
+pick('carpenter', { skipHistory: true });
+
+window.TAG_ITEMS = {"Advanced Research": ["Agriculture Research Paper Advanced", "Culinary Research Paper Advanced", "Dendrology Research Paper Advanced", "Engineering Research Paper Advanced", "Gathering Research Paper Advanced", "Geology Research Paper Advanced", "Metallurgy Research Paper Advanced"], "AdvancedModule": ["Advanced Upgrade"], "Animal Skin": ["Fur Pelt", "Leather Hide"], "AshlarStone": ["Ashlar Basalt", "Ashlar Gneiss", "Ashlar Granite", "Ashlar Limestone", "Ashlar Sandstone", "Ashlar Shale"], "BakedFood": ["Baked Agave", "Baked Beet", "Baked Corn", "Baked Heart Of Palm", "Baked Roast", "Baked Taro", "Baked Tomato"], "BakedVegetable": ["Baked Agave", "Baked Beet", "Baked Corn", "Baked Heart Of Palm", "Baked Taro", "Baked Tomato"], "Basic Research": ["Agriculture Research Paper Basic", "Culinary Research Paper Basic", "Dendrology Research Paper Basic", "Gathering Research Paper Basic", "Geology Research Paper Basic", "Metallurgy Research Paper Basic"], "BasicModule": ["Basic Upgrade"], "Bread": ["Bread", "Camas Bread"], "Burnable Fuel": ["Arrow", "Birch Log", "Board", "Cedar Log", "Ceiba Log", "Charcoal", "Crushed Coal", "Fir Log", "Hardwood Board", "Hardwood Hewn Log", "Hardwood Lumber", "Hewn Log", "Joshua Log", "Lumber", "Oak Log", "Palm Log", "Paper", "Peat", "Plant Fibers", "Redwood Log", "Saguaro Rib", "Softwood Board", "Softwood Hewn Log", "Softwood Lumber", "Spruce Log", "Wood Pulp", "Wood Scrap"], "CampfireSalad": ["Beet Campfire Salad", "Fern Campfire Salad", "Jungle Campfire Salad", "Root Campfire Salad"], "CharredFruit": ["Charred Cactus Fruit", "Charred Papaya", "Charred Pineapple"], "CharredGreen": ["Charred Agave", "Charred Fireweed Shoots", "Wilted Fiddleheads"], "CharredVegetable": ["Charred Beans", "Charred Beet", "Charred Camas Bulb", "Charred Corn", "Charred Heart Of Palm", "Charred Mushrooms", "Charred Taro", "Charred Tomato"], "Clothes": ["Banana Shirt", "Bandana", "Basic Backpack", "Bearpack", "Big Backpack", "Builder Boots", "Builder Gloves", "Builder Helmet", "Builder Overalls", "Builder Shirt", "Bycocket", "Camo Pants", "Camo Shirt", "Capris", "Carbide Helmet Lamp", "Chef Hat", "Chef Pants", "Chef Shirt", "Chef Shoes", "Cloth Belt", "Cloth Cape", "Derpy Hat", "Explorer Boots", "Explorer Gloves", "Explorer Hat", "Explorer Pants", "Explorer Shirt", "Farmer Boots", "Farmer Gloves", "Farmer Hat", "Farmer Overalls", "Farmer Shirt", "Garden Boots", "Gigot Sleeve Shirt", "Henley", "Light Backpack", "Low Top Shoes", "Muffin Hat", "Oil Head Lamp", "Primitive Canvas Boots", "Primitive Canvas Pants", "Primitive Canvas Shorts", "Primitive Fur Belt", "Primitive Leather Boots", "Primitive Leather Pants", "Primitive Leather Shirt", "Primitive Leather Shorts", "Running Shoes", "Sandals", "Shipwright Hat", "Shipwright Overalls", "Shipwright Sandals", "Shipwright Shirt", "Shorts", "Smith Apron", "Smith Bandana", "Smith Boots", "Smith Gloves", "Smith Pants", "Smith Shirt", "Square Belt", "Tailor Bowler Hat", "Tailor Pants", "Tailor Shirt", "Tailor Shoes", "Tall Boots", "Trapper Fur Hat", "Trapper Leather Hat", "Trousers", "Tunic", "Villagers Cowl Lowered", "Villagers Cowl Raised", "Wanderers Hood Lowered", "Wanderers Hood Raised", "Work Backpack", "Work Boots"], "Coal": ["Charcoal", "Crushed Coal"], "CompositeLumber": ["Composite Birch Lumber", "Composite Cedar Lumber", "Composite Ceiba Lumber", "Composite Fir Lumber", "Composite Joshua Lumber", "Composite Lumber", "Composite Oak Lumber", "Composite Palm Lumber", "Composite Redwood Lumber", "Composite Saguaro Lumber", "Composite Spruce Lumber"], "ConcentratedOre": ["Copper Concentrate", "Gold Concentrate", "Iron Concentrate"], "Concrete": ["Reinforced Concrete"], "Constructable": ["Adobe", "Ashlar Basalt", "Ashlar Gneiss", "Ashlar Granite", "Ashlar Limestone", "Ashlar Sandstone", "Ashlar Shale", "Asphalt Concrete", "Brick", "Composite Birch Lumber", "Composite Cedar Lumber", "Composite Ceiba Lumber", "Composite Fir Lumber", "Composite Joshua Lumber", "Composite Lumber", "Composite Oak Lumber", "Composite Palm Lumber", "Composite Redwood Lumber", "Composite Saguaro Lumber", "Composite Spruce Lumber", "Corrugated Steel", "Cotton Carpet", "Cotton Curtains", "Far East Lumber", "Flat Steel", "Framed Glass", "Garden Gravel", "Glass", "Hardwood Hewn Log", "Hardwood Lumber", "Hewn Log", "Lumber", "Mortared Granite", "Mortared Limestone", "Mortared Sandstone", "Mortared Stone", "Nylon Carpet", "Nylon Curtains", "Reinforced Concrete", "Softwood Hewn Log", "Softwood Lumber", "Stone Road", "Wool Carpet", "Wool Curtains", "Zen Garden"], "Crop": ["Agave Leaves", "Amanita Mushrooms", "Bean Sprout", "Beans", "Beet", "Beet Greens", "Bolete Mushrooms", "Camas Bulb", "Cookeina Mushrooms", "Corn", "Cotton Boll", "Creosote Flower", "Crimini Mushrooms", "Daisy", "Fireweed Shoots", "Flax Flower", "Flax Stem", "Giant Cactus Fruit", "Heart Of Palm", "Huckleberries", "Kelp", "Lupine", "Orchid", "Papaya", "Pineapple", "Plant Fibers", "Prickly Pear Fruit", "Pumpkin", "Rice", "Rose", "Sunflower", "Taro Root", "Trillium Flower", "Tulip", "Wheat"], "Crop Seed": ["Agave Seed", "Amanita Mushroom Spores", "Beans", "Beet Seed", "Bolete Mushroom Spores", "Camas Bulb", "Cookeina Mushroom Spores", "Corn Seed", "Cotton Seed", "Crimini Mushroom Spores", "Fern Spore", "Fireweed Seed", "Flax Seed", "Huckleberry Seed", "Papaya Seed", "Pineapple Seed", "Prickly Pear Seed", "Pumpkin Seed", "Rice", "Sunflower Seed", "Taro Seed", "Tomato Seed", "Wheat Seed"], "CrushedRock": ["Ceramic Scrap", "Crushed Basalt", "Crushed Gneiss", "Crushed Granite", "Crushed Limestone", "Crushed Mixed Rock", "Crushed Sandstone", "Crushed Shale", "Crushed Slag"], "Currency": ["Board", "Clam", "Copper Bar", "Copper Plate", "Cotton Fabric", "Fur Pelt", "Gold Bar", "Hardwood Board", "Iron Bar", "Iron Plate", "Leather Hide", "Limestone", "Linen Fabric", "Paper", "Plastic", "Softwood Board", "Steel Bar", "Steel Plate"], "Decontaminant": ["Chemical Decontaminant", "Heavy Mineral Decontaminant", "Soil Decontaminant"], "Excavatable": ["Basalt", "Bio Residue", "Ceramic Scrap", "Chemical Waste", "Clay", "Coal", "Copper Concentrate", "Copper Ore", "Copper Scrap", "Crushed Basalt", "Crushed Coal", "Crushed Copper Ore", "Crushed Gneiss", "Crushed Gold Ore", "Crushed Granite", "Crushed Iron Ore", "Crushed Limestone", "Crushed Mixed Rock", "Crushed Sandstone", "Crushed Shale", "Crushed Slag", "Crushed Sulfur", "Electronic Scrap", "Food Scrap", "Glass Scrap", "Gneiss", "Gold Concentrate", "Gold Ore", "Gold Scrap", "Granite", "Iron Concentrate", "Iron Ore", "Iron Scrap", "Limestone", "Peat", "Plastic Scrap", "Sandstone", "Shale", "Slag", "Sulfur", "Textiles", "Wood Scrap"], "Excavation": ["Excavator", "Skid Steer", "Steam Tractor"], "Explosives": ["Black Powder", "Blasting Cap", "Nitric Acid"], "Fabric": ["Cloth", "Cotton Fabric", "Linen Fabric", "Nylon Fabric", "Wool Fabric"], "Fat": ["Flaxseed Oil", "Oil", "Tallow"], "Fertilizer": ["Berry Extract Fertilizer", "Blood Meal Fertilizer", "Camas Ash Fertilizer", "Composite Filler", "Compost Fertilizer", "Fiber Filler", "Hide Ash Fertilizer", "Pelt Fertilizer", "Phosphate Fertilizer", "Pulp Filler"], "FertilizerFiller": ["Composite Filler", "Fiber Filler", "Pulp Filler"], "Fish": ["Bass", "Blue Shark", "Cod", "Moon Jellyfish", "Pacific Sardine", "Salmon", "Trout", "Tuna"], "FriedVegetable": ["Fried Camas", "Fried Fiddleheads", "Fried Hearts Of Palm", "Fried Taro", "Fried Tomatoes"], "Fruit": ["Giant Cactus Fruit", "Huckleberries", "Papaya", "Pineapple", "Prickly Pear Fruit", "Pumpkin"], "Fuel": ["Arrow", "Biodiesel", "Birch Log", "Board", "Cedar Log", "Ceiba Log", "Charcoal", "Crushed Coal", "Far East Lumber", "Fir Log", "Flaxseed Oil", "Gasoline", "Hardwood Board", "Hardwood Hewn Log", "Hardwood Lumber", "Hewn Log", "Joshua Log", "Log", "Lumber", "Oak Log", "Oil", "Palm Log", "Paper", "Peat", "Redwood Log", "Saguaro Rib", "Softwood Board", "Softwood Hewn Log", "Softwood Lumber", "Spruce Log", "Strange Fuel", "Tallow", "Torch", "Wood Pulp", "Wood Scrap"], "Fungus": ["Amanita Mushrooms", "Bolete Mushrooms", "Cookeina Mushrooms", "Crimini Mushrooms"], "Garbage": ["Chemical Pollutant", "Chemical Waste", "Electronic Scrap"], "Gear": ["Iron Gear", "Steel Gear"], "Grain": ["Corn", "Rice", "Wheat"], "Greens": ["Agave Leaves", "Beet Greens", "Fireweed Shoots"], "Hardwood": ["Birch Log", "Ceiba Log", "Oak Log"], "HardwoodLumber": ["Composite Birch Lumber", "Composite Ceiba Lumber", "Composite Oak Lumber"], "Harvestable": ["Agave Leaves", "Amanita Mushrooms", "Bean Sprout", "Beet", "Beet Greens", "Bolete Mushrooms", "Cookeina Mushrooms", "Corn", "Creosote Flower", "Crimini Mushrooms", "Fireweed Shoots", "Flax Flower", "Giant Cactus Fruit", "Heart Of Palm", "Huckleberries", "Orchid", "Papaya", "Pineapple", "Prickly Pear Fruit", "Pumpkin", "Sunflower", "Taro Root", "Trillium Flower", "Wheat"], "HerbivoreFeed": ["Basic Salad", "Beet Campfire Salad", "Beet Greens", "Campfire Salad", "Crimson Salad", "Fern Campfire Salad", "Fireweed Shoots", "Fruit Salad", "Huckleberries", "Jungle Campfire Salad", "Millionaires Salad", "Root Campfire Salad", "Sweet Salad"], "HewnLog": ["Hardwood Hewn Log", "Hewn Log", "Softwood Hewn Log"], "Hoer": ["Steam Tractor Plow"], "Housing": ["Adorned Ashlar Basalt Bench", "Adorned Ashlar Basalt Chair", "Adorned Ashlar Basalt Table", "Adorned Ashlar Gneiss Bench", "Adorned Ashlar Gneiss Chair", "Adorned Ashlar Gneiss Table", "Adorned Ashlar Granite Bench", "Adorned Ashlar Granite Chair", "Adorned Ashlar Granite Table", "Adorned Ashlar Limestone Bench", "Adorned Ashlar Limestone Chair", "Adorned Ashlar Limestone Table", "Adorned Ashlar Sandstone Bench", "Adorned Ashlar Sandstone Chair", "Adorned Ashlar Sandstone Table", "Adorned Ashlar Shale Bench", "Adorned Ashlar Shale Chair", "Adorned Ashlar Shale Table", "Adorned Ashlar Stone Bench", "Adorned Ashlar Stone Chair", "Adorned Ashlar Stone Table", "Anatomy Book", "Ashlar Basalt Bench", "Ashlar Basalt Chair", "Ashlar Basalt Fireplace", "Ashlar Basalt Table", "Ashlar Gneiss Bench", "Ashlar Gneiss Chair", "Ashlar Gneiss Fireplace", "Ashlar Gneiss Table", "Ashlar Granite Bench", "Ashlar Granite Chair", "Ashlar Granite Fireplace", "Ashlar Granite Table", "Ashlar Large Basalt Fountain", "Ashlar Large Gneiss Fountain", "Ashlar Large Granite Fountain", "Ashlar Large Limestone Fountain", "Ashlar Large Sandstone Fountain", "Ashlar Large Shale Fountain", "Ashlar Large Stone Fountain", "Ashlar Limestone Bench", "Ashlar Limestone Chair", "Ashlar Limestone Fireplace", "Ashlar Limestone Table", "Ashlar Sandstone Bench", "Ashlar Sandstone Chair", "Ashlar Sandstone Fireplace", "Ashlar Sandstone Table", "Ashlar Shale Bench", "Ashlar Shale Chair", "Ashlar Shale Fireplace", "Ashlar Shale Table", "Ashlar Small Basalt Fountain", "Ashlar Small Gneiss Fountain", "Ashlar Small Granite Fountain", "Ashlar Small Limestone Fountain", "Ashlar Small Sandstone Fountain", "Ashlar Small Shale Fountain", "Ashlar Small Stone Fountain", "Ashlar Stone Bench", "Ashlar Stone Chair", "Ashlar Stone Fireplace", "Ashlar Stone Table", "Atlas Book", "Banana Rug", "Bathtub", "Bison Mount", "Bison Pelt", "Bookshelf", "Botanical Book", "Brazier", "Brick Fireplace", "Candle Stand", "Cart Blueprint Poster", "Carved Pumpkin", "Cast Iron Bed", "Cast Iron Bench", "Cast Iron Chair", "Cast Iron Plaque", "Cast Iron Royal Bed", "Cast Iron Table", "Ceiling Candle", "Ceramic Tea Cup", "Ceramic Tea Pot", "Ceramic Tray", "Chandelier", "Coffee Table", "Composite Birch Bench", "Composite Birch Chair", "Composite Birch Table", "Composite Cedar Bench", "Composite Cedar Chair", "Composite Cedar Table", "Composite Ceiba Bench", "Composite Ceiba Chair", "Composite Ceiba Table", "Composite Fir Bench", "Composite Fir Chair", "Composite Fir Table", "Composite Hardwood Bench", "Composite Hardwood Chair", "Composite Hardwood Table", "Composite Joshua Bench", "Composite Joshua Chair", "Composite Joshua Table", "Composite Lumber Bench", "Composite Lumber Chair", "Composite Lumber Table", "Composite Oak Bench", "Composite Oak Chair", "Composite Oak Table", "Composite Palm Bench", "Composite Palm Chair", "Composite Palm Table", "Composite Redwood Bench", "Composite Redwood Chair", "Composite Redwood Table", "Composite Saguaro Bench", "Composite Saguaro Chair", "Composite Saguaro Table", "Composite Softwood Bench", "Composite Softwood Chair", "Composite Softwood Table", "Composite Spruce Bench", "Composite Spruce Chair", "Composite Spruce Table", "Copper Frame Landscape", "Copper Frame Portrait", "Copper Frame Square", "Copper Frame Tall", "Copper Frame Wide", "Cotton Streamer Stars", "Cotton Streamer Stripes", "Couch", "Country Foundation", "Decorative Anchor", "Decorative Glass Buoy Blue", "Decorative Glass Buoy Green", "Decorative Glass Buoy Red", "Decorative Glass Buoy Violet", "Decorative Glass Buoy Yellow", "Decorative Hanging Buoy", "Decorative Life Preserver", "Decorative Ship Wheel", "Deer Pelt", "Eco Book", "Election Poster", "Electric Wall Lamp", "Elk Gong", "Elk Mount", "Elk Statuette", "Federation Foundation", "Fish Kites", "Fox Pelt", "Friendly Scarecrow", "Galaxy Vase", "Garden Pond", "Goat Mount", "Gold Frame Landscape", "Gold Frame Portrait", "Gold Frame Square", "Gold Frame Tall", "Gold Frame Wide", "Gold Trim Book", "Granite Spiral Fountain", "Granite Terrace Fountain", "Hanging Basket", "Hanging Electric Wall Lamp", "Hardwood Double Shelf", "Hardwood Lumber Bench", "Hardwood Lumber Chair", "Hardwood Lumber Dresser", "Hardwood Lumber Hallway Table", "Hardwood Lumber Table", "Hare Pelt", "Hewn Bench", "Hewn Chair", "Hewn Dresser", "Hewn Hardwood Bench", "Hewn Hardwood Chair", "Hewn Hardwood Table", "Hewn Nightstand", "Hewn Softwood Bench", "Hewn Softwood Chair", "Hewn Softwood Table", "Hewn Table", "Hourglass", "Icebox", "Iron Frame Landscape", "Iron Frame Portrait", "Iron Frame Square", "Iron Frame Tall", "Iron Frame Wide", "Kite", "Koi Pond", "Large Bath Mat", "Large Cotton Bunting Festive", "Large Cotton Bunting Red", "Large Cotton Bunting Regal", "Large Cotton Bunting Vibrant", "Large Festive Paper Lantern", "Large Nylon Bunting Green", "Large Nylon Bunting Purple", "Large Nylon Bunting Yellow", "Large Paper Lantern", "Latrine", "Lighthouse Lamp", "Limestone Bison Statue", "Limestone Otter Statue", "Limestone Owl Statue", "Limestone Wolf Statue", "Long Basic Hardwood Shelf", "Long Basic Softwood Shelf", "Long Basic Wood Shelf", "Long Floating Hardwood Shelf", "Long Floating Softwood Shelf", "Long Floating Wood Shelf", "Long Hardwood Lumber Shelf", "Long Hardwood Veneer Shelf", "Long Lumber Shelf", "Long Softwood Lumber Shelf", "Long Softwood Veneer Shelf", "Long Steel Shelf", "Long Thin Hardwood Veneer Shelf", "Long Thin Softwood Veneer Shelf", "Long Thin Wood Veneer Shelf", "Long Wood Veneer Shelf", "Lumber Bench", "Lumber Chair", "Lumber Dresser", "Lumber Hallway Table", "Lumber Table", "Modern Double Street Light", "Modern Street Light", "Mortared Granite Bench", "Mortared Granite Chair", "Mortared Granite Fireplace", "Mortared Granite Table", "Mortared Limestone Bench", "Mortared Limestone Chair", "Mortared Limestone Fireplace", "Mortared Limestone Table", "Mortared Sandstone Bench", "Mortared Sandstone Chair", "Mortared Sandstone Fireplace", "Mortared Sandstone Table", "Mortared Stone Bench", "Mortared Stone Chair", "Mortared Stone Fireplace", "Mortared Stone Table", "Nylon Futon Bed", "Nylon Futon Couch", "Orange Vase", "Ornate Cast Iron Plaque", "Ornate Gold Frame Landscape", "Ornate Gold Frame Portrait", "Ornate Gold Frame Square", "Ornate Gold Frame Tall", "Ornate Gold Frame Wide", "Ornate Iron Frame Landscape", "Ornate Iron Frame Portrait", "Ornate Iron Frame Square", "Ornate Iron Frame Tall", "Ornate Iron Frame Wide", "Ornate Stone Plaque", "Ornate Wood Plaque", "Ornate Wooden Frame Landscape", "Ornate Wooden Frame Portrait", "Ornate Wooden Frame Square", "Ornate Wooden Frame Tall", "Ornate Wooden Frame Wide", "Orrery", "Padded Chair", "Participation Trophy", "Periodic Table Poster", "Plant Vase", "Planter Pot Round", "Planter Pot Square", "Plastic Outdoor Bench", "Plastic Outdoor Chair", "Plastic Outdoor Table", "Plastic Window Planter", "Purple Vase", "Red Vase", "Redwoods Poster", "Refrigerator", "Rotating Cube", "Rug Large", "Rug Medium", "Rug Small", "Rustic Window Planter", "Salt Basket", "Saved The World Achievement Trophy", "Scarecrow", "Sheep Mount", "Shelf Cabinet", "Short Basic Hardwood Shelf", "Short Basic Softwood Shelf", "Short Basic Wood Shelf", "Short Curved Hardwood Veneer Shelf", "Short Curved Softwood Veneer Shelf", "Short Curved Wood Veneer Shelf", "Short Floating Hardwood Shelf", "Short Floating Softwood Shelf", "Short Floating Wood Shelf", "Short Hardwood Veneer Shelf", "Short Softwood Veneer Shelf", "Short Steel Shelf", "Short Thin Hardwood Veneer Shelf", "Short Thin Softwood Veneer Shelf", "Short Thin Wood Veneer Shelf", "Short Wood Veneer Shelf", "Sink", "Small Bath Mat", "Small Clay Pot", "Small Cotton Bunting Festive", "Small Cotton Bunting Red", "Small Cotton Bunting Regal", "Small Cotton Bunting Vibrant", "Small Faceted Steel Pot", "Small Nylon Bunting Green", "Small Nylon Bunting Purple", "Small Nylon Bunting Yellow", "Small Paper Lantern", "Small Rough Basalt Pot", "Small Rough Limestone Pot", "Small Round Limestone Pot", "Small Sink", "Small Square Basalt Pot", "Small Square Clay Pot", "Small Square Limestone Pot", "Small Steel Pot", "Softwood Double Shelf", "Softwood Lumber Bench", "Softwood Lumber Chair", "Softwood Lumber Dresser", "Softwood Lumber Hallway Table", "Softwood Lumber Table", "Square Lumber Pot", "Standing Basalt Pot", "Standing Clay Pot", "Steel Abstract Fixture", "Steel Ceiling Light", "Steel Floor Lamp", "Steel Hanging Fixture", "Steel Hanging Lamp", "Steel Kitchen Lamp", "Steel Searchlight", "Steel Square Fixture", "Steel Table Lamp", "Stone Brazier", "Stone Plaque", "Streetlamp", "Stuffed Alligator", "Stuffed Bison", "Stuffed Elk", "Stuffed Goat", "Stuffed Jaguar", "Stuffed Wolf", "Stump Bed", "Stump Chair", "Stump Latrine", "Stump Table", "Swirl Vase", "Tall Limestone Pot", "Tallow Candle", "Tallow Lamp", "Tallow Wall Lamp", "Tapestry", "Tapestry Fish", "Tapestry Sunset", "Tiki Torch", "Toilet", "Torch Stand", "Towel Rack", "Town Bell", "Town Foundation", "Trophy Artist", "Trophy Baker", "Trophy Farmer", "Trophy Logger", "Trophy Miner", "Upholstered Chair", "Upholstered Couch", "Wall Candle", "Washboard", "Washing Machine", "Window Shutters Center", "Window Shutters Left", "Window Shutters Right", "Wolf Pelt", "Wood Double Shelf", "Wood Plaque", "Wood Window Planter", "Wooden Ceiling Light", "Wooden Fabric Bed", "Wooden Floor Lamp", "Wooden Frame Landscape", "Wooden Frame Portrait", "Wooden Frame Square", "Wooden Frame Tall", "Wooden Frame Wide", "Wooden Kitchen Lamp", "Wooden Straw Bed", "Wooden Table Lamp", "Wooden Wall Torch Stand", "Zataku Table"], "Insulation": ["Cellulose Insulation", "Glass Insulation", "Rock Insulation"], "LargeFish": ["Blue Shark", "Tuna"], "Liquid Fuel": ["Biodiesel", "Gasoline"], "Lumber": ["Hardwood Lumber", "Lumber", "Softwood Lumber"], "Marine Life": ["Clam", "Urchin"], "MediumCarcass": ["Alligator Carcass", "Bighorn Carcass", "Deer Carcass", "Elk Carcass", "Jaguar Carcass", "Mountain Goat Carcass", "Wolf Carcass"], "MediumFish": ["Bass", "Cod", "Salmon", "Trout"], "MediumLeatherCarcass": ["Alligator Carcass", "Deer Carcass", "Elk Carcass", "Jaguar Carcass"], "MediumWoolyCarcass": ["Bighorn Carcass", "Mountain Goat Carcass"], "Metal": ["Copper Bar", "Gold Bar", "Iron Bar", "Steel Bar"], "Modern Research": ["Agriculture Research Paper Modern", "Culinary Research Paper Modern", "Dendrology Research Paper Modern", "Engineering Research Paper Modern", "Geology Research Paper Modern", "Metallurgy Research Paper Modern"], "ModernModule": ["Modern Upgrade"], "MortaredStone": ["Mortared Granite", "Mortared Limestone", "Mortared Sandstone", "Mortared Stone"], "Mountable": ["Adorned Ashlar Basalt Bench", "Adorned Ashlar Basalt Chair", "Adorned Ashlar Gneiss Bench", "Adorned Ashlar Gneiss Chair", "Adorned Ashlar Granite Bench", "Adorned Ashlar Granite Chair", "Adorned Ashlar Limestone Bench", "Adorned Ashlar Limestone Chair", "Adorned Ashlar Sandstone Bench", "Adorned Ashlar Sandstone Chair", "Adorned Ashlar Shale Bench", "Adorned Ashlar Shale Chair", "Adorned Ashlar Stone Bench", "Adorned Ashlar Stone Chair", "Ashlar Basalt Bench", "Ashlar Basalt Chair", "Ashlar Gneiss Bench", "Ashlar Gneiss Chair", "Ashlar Granite Bench", "Ashlar Granite Chair", "Ashlar Limestone Bench", "Ashlar Limestone Chair", "Ashlar Sandstone Bench", "Ashlar Sandstone Chair", "Ashlar Shale Bench", "Ashlar Shale Chair", "Ashlar Stone Bench", "Ashlar Stone Chair", "Board Of Elections", "Cast Iron Bed", "Cast Iron Bench", "Cast Iron Chair", "Cast Iron Royal Bed", "Census Bureau", "Composite Birch Bench", "Composite Birch Chair", "Composite Cedar Bench", "Composite Cedar Chair", "Composite Ceiba Bench", "Composite Ceiba Chair", "Composite Fir Bench", "Composite Fir Chair", "Composite Hardwood Bench", "Composite Hardwood Chair", "Composite Joshua Bench", "Composite Joshua Chair", "Composite Lumber Bench", "Composite Lumber Chair", "Composite Oak Bench", "Composite Oak Chair", "Composite Palm Bench", "Composite Palm Chair", "Composite Redwood Bench", "Composite Redwood Chair", "Composite Saguaro Bench", "Composite Saguaro Chair", "Composite Softwood Bench", "Composite Softwood Chair", "Composite Spruce Bench", "Composite Spruce Chair", "Couch", "Court Chair", "Embassy Desk", "Executive Office", "Government Office", "Hardwood Lumber Bench", "Hardwood Lumber Chair", "Hewn Bench", "Hewn Chair", "Hewn Hardwood Bench", "Hewn Hardwood Chair", "Hewn Softwood Bench", "Hewn Softwood Chair", "Immigration Desk", "Large Court", "Latrine", "Lumber Bench", "Lumber Chair", "Mortared Granite Bench", "Mortared Granite Chair", "Mortared Limestone Bench", "Mortared Limestone Chair", "Mortared Sandstone Bench", "Mortared Sandstone Chair", "Mortared Stone Bench", "Mortared Stone Chair", "Nylon Futon Bed", "Nylon Futon Couch", "Padded Chair", "Plastic Outdoor Bench", "Plastic Outdoor Chair", "Real Estate Desk", "Registrar", "Small Court", "Softwood Lumber Bench", "Softwood Lumber Chair", "Stenographers Table", "Stump Bed", "Stump Chair", "Stump Latrine", "Toilet", "Upholstered Chair", "Upholstered Couch", "Wooden Fabric Bed", "Wooden Straw Bed", "Zataku Table", "Zoning Office"], "NaturalFiber": ["Daisy", "Flax Fiber", "Kelp", "Lupine", "Plant Fibers", "Rose", "Tulip", "Wood Pulp"], "Oil": ["Flaxseed Oil", "Oil"], "Ore": ["Coal", "Copper Ore", "Gold Ore", "Iron Ore"], "Petals": ["Creosote Flower", "Daisy", "Flax Flower", "Lupine", "Orchid", "Rose", "Trillium Flower", "Tulip"], "Pigment": ["Blue Powder", "Charcoal Powder", "Copper Hydroxide", "Cyan Powder", "Iron Oxide", "Magenta Powder", "White Powder", "Yellow Powder"], "Raw Food": ["Agave Leaves", "Bean Sprout", "Beans", "Beet", "Beet Greens", "Bolete Mushrooms", "Camas Bulb", "Cookeina Mushrooms", "Corn", "Crimini Mushrooms", "Fireweed Shoots", "Giant Cactus Fruit", "Heart Of Palm", "Huckleberries", "Papaya", "Pineapple", "Prickly Pear Fruit", "Pumpkin", "Rice", "Taro Root", "Wheat"], "Research": ["Agriculture Research Paper Advanced", "Agriculture Research Paper Basic", "Agriculture Research Paper Modern", "Culinary Research Paper Advanced", "Culinary Research Paper Basic", "Culinary Research Paper Modern", "Dendrology Research Paper Advanced", "Dendrology Research Paper Basic", "Dendrology Research Paper Modern", "Engineering Research Paper Advanced", "Engineering Research Paper Modern", "Gathering Research Paper Advanced", "Gathering Research Paper Basic", "Geology Research Paper Advanced", "Geology Research Paper Basic", "Geology Research Paper Modern", "Metallurgy Research Paper Advanced", "Metallurgy Research Paper Basic", "Metallurgy Research Paper Modern"], "Road": ["Asphalt Concrete", "Stone Road"], "RoadType": ["Asphalt Concrete", "Stone Road"], "Rock": ["Basalt", "Gneiss", "Granite", "Limestone", "Sandstone", "Shale", "Stone"], "Root": ["Beet", "Camas Bulb", "Taro Root"], "Salad": ["Basic Salad", "Fruit Salad"], "Silica": ["Crushed Granite", "Crushed Sandstone"], "SmallCarcass": ["Coyote Carcass", "Fox Carcass"], "SmallFish": ["Crab Carcass", "Moon Jellyfish"], "Softwood": ["Cedar Log", "Fir Log", "Redwood Log", "Spruce Log"], "SoftwoodLumber": ["Composite Cedar Lumber", "Composite Fir Lumber", "Composite Redwood Lumber"], "SpecialtyModule": ["Advanced Baking Upgrade", "Advanced Cooking Upgrade", "Advanced Masonry Upgrade", "Advanced Smelting Upgrade", "Baking Upgrade", "Basic Engineering Upgrade", "Blacksmith Advanced Upgrade", "Blacksmith Upgrade", "Butchery Upgrade", "Campfire Cooking Upgrade", "Carpentry Advanced Upgrade", "Carpentry Basic Upgrade", "Composites Upgrade", "Cooking Upgrade", "Cutting Edge Cooking Upgrade", "Electronics Upgrade", "Farming Upgrade", "Fertilizers Upgrade", "Gathering Advanced Upgrade", "Gathering Basic Upgrade", "Glassworking Advanced Upgrade", "Glassworking Modern Upgrade", "Hunting Upgrade", "Industry Upgrade", "Logging Advanced Upgrade", "Logging Basic Upgrade", "Masonry Advanced Upgrade", "Masonry Basic Upgrade", "Mechanics Advanced Upgrade", "Mechanics Modern Upgrade", "Milling Upgrade", "Mining Advanced Upgrade", "Mining Basic Upgrade", "Mining Modern Upgrade", "Oil Drilling Upgrade", "Painting Upgrade", "Paper Milling Upgrade", "Pottery Upgrade", "Shipwright Advanced Upgrade", "Shipwright Basic Upgrade", "Smelting Basic Upgrade", "Smelting Upgrade", "Tailoring Modern Upgrade", "Tailoring Upgrade"], "TinyCarcass": ["Agouti Carcass", "Hare Carcass", "Otter Carcass", "Prairie Dog Carcass", "Snapping Turtle Carcass", "Turkey Carcass"], "TinyFurCarcass": ["Agouti Carcass", "Otter Carcass"], "TinyLeatherCarcass": ["Prairie Dog Carcass", "Snapping Turtle Carcass", "Turkey Carcass"], "Tool": ["Chainsaw", "Claim Tool", "Composite Bow", "Flax Trawler Net", "Handheld Camera", "Iron Axe", "Iron Hammer", "Iron Hoe", "Iron Machete", "Iron Paint Sprayer", "Iron Pickaxe", "Iron Road Tool", "Iron Rock Drill", "Iron Shovel", "Iron Sickle", "Modern Axe", "Modern Hammer", "Modern Hoe", "Modern Machete", "Modern Paint Sprayer", "Modern Pickaxe", "Modern Rock Drill", "Modern Scythe", "Modern Shovel", "Norse Axe", "Nylon Trawler Net", "Recurve Bow", "Remote Detonator", "Steam Tractor Harvester", "Steam Tractor Plow", "Steam Tractor Scoop", "Steam Tractor Sower", "Steam Tractor Tree Cutter", "Steam Truck Flatbed", "Steam Truck Garbage Collector", "Steel Axe", "Steel Hammer", "Steel Hoe", "Steel Machete", "Steel Pickaxe", "Steel Shovel", "Steel Sickle", "Stone Axe", "Stone Hammer", "Stone Machete", "Stone Pickaxe", "Stone Road Tool", "Stone Sickle", "Truck Dumpster Loader", "Truck Flatbed", "Truck Garbage Collector", "Wooden Bow", "Wooden Hoe", "Wooden Paint Sprayer", "Wooden Shovel"], "Torch": ["Torch"], "Upgrade": ["Advanced Baking Upgrade", "Advanced Cooking Upgrade", "Advanced Masonry Upgrade", "Advanced Smelting Upgrade", "Advanced Upgrade", "Advanced Upgrade Lvl1", "Advanced Upgrade Lvl2", "Advanced Upgrade Lvl3", "Advanced Upgrade Lvl4", "Baking Upgrade", "Basic Engineering Upgrade", "Basic Upgrade", "Basic Upgrade Lvl1", "Basic Upgrade Lvl2", "Basic Upgrade Lvl3", "Basic Upgrade Lvl4", "Blacksmith Advanced Upgrade", "Blacksmith Upgrade", "Butchery Upgrade", "Campfire Cooking Upgrade", "Carpentry Advanced Upgrade", "Carpentry Basic Upgrade", "Composites Upgrade", "Cooking Upgrade", "Cutting Edge Cooking Upgrade", "Electronics Upgrade", "Farming Upgrade", "Fertilizers Upgrade", "Gathering Advanced Upgrade", "Gathering Basic Upgrade", "Glassworking Advanced Upgrade", "Glassworking Modern Upgrade", "Hunting Upgrade", "Industry Upgrade", "Logging Advanced Upgrade", "Logging Basic Upgrade", "Masonry Advanced Upgrade", "Masonry Basic Upgrade", "Mechanics Advanced Upgrade", "Mechanics Modern Upgrade", "Milling Upgrade", "Mining Advanced Upgrade", "Mining Basic Upgrade", "Mining Modern Upgrade", "Modern Upgrade", "Modern Upgrade Lvl1", "Modern Upgrade Lvl2", "Modern Upgrade Lvl3", "Modern Upgrade Lvl4", "Oil Drilling Upgrade", "Painting Upgrade", "Paper Milling Upgrade", "Pottery Upgrade", "Shipwright Advanced Upgrade", "Shipwright Basic Upgrade", "Smelting Basic Upgrade", "Smelting Upgrade", "Tailoring Modern Upgrade", "Tailoring Upgrade"], "Vegetable": ["Beans", "Beet", "Camas Bulb", "Corn", "Heart Of Palm", "Taro Root"], "Waste Product": ["Slag"], "Wood": ["Birch Log", "Cedar Log", "Ceiba Log", "Fir Log", "Joshua Log", "Oak Log", "Palm Log", "Redwood Log", "Saguaro Rib", "Spruce Log"], "WoodBoard": ["Board", "Hardwood Board", "Softwood Board"]};
+
+(function initTagLookupMap() {
+  const rawMap = window.TAG_ITEMS || {};
+  const byNorm = new Map();
+  Object.keys(rawMap).forEach(tagName => {
+    const keyExact = String(tagName).trim().toLowerCase();
+    const keyCompact = keyExact.replace(/[^a-z0-9]/g, "");
+    const list = Array.isArray(rawMap[tagName]) ? rawMap[tagName] : [];
+    byNorm.set(keyExact, { label: tagName, items: list });
+    if (!byNorm.has(keyCompact)) byNorm.set(keyCompact, { label: tagName, items: list });
+  });
+  window.__TAG_LOOKUP__ = byNorm;
+})();
+
+function resolveTagEntries(rawTagName) {
+  const clean = String(rawTagName || "")
+    .replace(/\s*\(tag\)\s*$/i, "")
+    .replace(/^\s*\+?\s*\d+(?:\.\d+)?\s*x?\s*/i, "")
+    .trim();
+  if (!clean || !window.__TAG_LOOKUP__) return null;
+  const k1 = clean.toLowerCase();
+  return window.__TAG_LOOKUP__.get(k1) || window.__TAG_LOOKUP__.get(k1.replace(/[^a-z0-9]/g, "")) || null;
+}
+
+function cleanIngredientName(rawPart) {
+  return String(rawPart || "")
+    .trim()
+    .replace(/^\d+(?:\.\d+)?\s*x\s+/i, "")
+    .replace(/\s*\(Tag\)\s*$/i, "")
+    .trim();
+}
+
+function ensureTagInspectorEl() {
+  let box = document.getElementById("tag-inspector");
+  if (box) return box;
+  const panel = document.querySelector(".panel");
+  const tableWrap = panel ? panel.querySelector(".table-wrap") : null;
+  box = document.createElement("div");
+  box.id = "tag-inspector";
+  box.style.cssText = "display:none;background:#090c10;border:1px solid rgba(148,163,184,0.2);border-left:3px solid #f59f00;border-radius:10px;padding:12px 14px;margin:0 0 14px 0;";
+  if (panel && tableWrap) panel.insertBefore(box, tableWrap);
+  else if (panel) panel.appendChild(box);
+  else document.body.appendChild(box);
+  return box;
+}
+
+function closeTagInspector() {
+  const box = document.getElementById("tag-inspector");
+  if (box) { box.style.display = "none"; box.innerHTML = ""; }
+}
+
+function findRecipeTargetByName(targetName) {
+  const needle = normalizeItemKey(targetName);
+  if (!needle) return null;
+  const profOrder = Object.keys(DB || {});
+  const sortedProfs = profOrder.filter(k => k !== 'base_items').concat(profOrder.filter(k => k === 'base_items'));
+  for (const profKey of sortedProfs) {
+    const srcList = (typeof fullDbItems !== "undefined" && fullDbItems[profKey])
+      ? fullDbItems[profKey]
+      : ((DB[profKey] && DB[profKey].items) ? DB[profKey].items : []);
+    const found = srcList.find(it => normalizeItemKey(it && it.n) === needle);
+    if (found) {
+      const specName = normalizeSpecName(found.s);
+      const matchedSub = (SUB_PROFESSIONS[profKey] || []).find(sub => sub.key.toLowerCase() === specName);
+      return {
+        profKey,
+        subKey: matchedSub ? matchedSub.key : null,
+        itemName: found.n
+      };
+    }
+  }
+  return null;
+}
+
+function jumpToIngredient(encodedName) {
+  const name = decodeURIComponent(encodedName || "").trim();
+  if (!name) return;
+  if (typeof window.__recordNavSnapshot === 'function') {
+    window.__recordNavSnapshot();
+  }
+  closeTagInspector();
+  window.__ACTIVE_TAG_FILTER__ = null;
+
+  const target = findRecipeTargetByName(name);
+  const exactName = target ? target.itemName : name;
+  window.__EXACT_ITEM_FILTER__ = { label: exactName, exactLower: normalizeItemKey(exactName) };
+
+  const qInput = document.getElementById("q");
+  if (qInput) qInput.value = exactName;
+
+  if (target && target.profKey && DB[target.profKey]) {
+    if (fullDbItems[target.profKey]) {
+      DB[target.profKey].items = fullDbItems[target.profKey].slice();
+    }
+    cur = target.profKey;
+    currentProfKey = target.profKey;
+    activeSubKey = target.subKey || null;
+    activeSubLevel = null;
+    if (target.profKey === 'base_items') {
+      setArtisanSelection(null);
+    } else {
+      setArtisanSelection(target.profKey);
+    }
+    if (typeof renderSubPills === 'function') renderSubPills(target.profKey);
+  }
+
+  draw();
+}
+
+function openTagItems(encodedTagName) {
+  const tagName = decodeURIComponent(encodedTagName || "").trim();
+  if (typeof window.__recordNavSnapshot === 'function') {
+    window.__recordNavSnapshot();
+  }
+  const entry = resolveTagEntries(tagName);
+  const box = ensureTagInspectorEl();
+  const items = entry ? entry.items : [];
+  const displayTag = entry ? entry.label : tagName;
+
+  activeSubKey = null;
+  activeSubLevel = null;
+  if (currentProfKey && fullDbItems[currentProfKey]) {
+    DB[currentProfKey].items = fullDbItems[currentProfKey].slice();
+  }
+  if (typeof renderSubPills === 'function') renderSubPills(currentProfKey || cur);
+
+  if (items.length) {
+    window.__EXACT_ITEM_FILTER__ = null;
+    window.__ACTIVE_TAG_FILTER__ = {
+      label: displayTag,
+      namesLower: new Set(items.map(n => normalizeItemKey(n)))
+    };
+    const qInput = document.getElementById("q");
+    if (qInput) qInput.value = displayTag;
+  }
+
+  const chipsHtml = items.map(itemName => {
+    const encItem = encodeURIComponent(itemName);
+    const target = findRecipeTargetByName(itemName);
+    const badge = target && target.profKey === "base_items"
+      ? ` <span style="color:#58a6ff;font-size:11px;">[Base]</span>`
+      : (target ? ` <span style="color:#3fb950;font-size:11px;">[Recipe]</span>` : "");
+    return `<button type="button" onclick="jumpToIngredient('${encItem}')" style="background:#151c27;border:1px solid rgba(148,163,184,0.2);color:#f0f6fc;padding:4px 9px;border-radius:6px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;"><span>${itemName}</span>${badge}</button>`;
+  }).join(" ");
+
+  box.style.display = "block";
+  box.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+      <div style="font-size:13px;">
+        <strong style="color:#f59f00;">Tag: ${displayTag}</strong>
+        <span style="color:#9aa7b8;margin-left:6px;">(${items.length} item${items.length === 1 ? "" : "s"})</span>
+      </div>
+      <button type="button" onclick="closeTagInspector(); window.__ACTIVE_TAG_FILTER__=null; const qEl=document.getElementById('q'); if(qEl) qEl.value=''; draw();" style="background:#151c27;border:1px solid rgba(148,163,184,0.22);color:#c9d1d9;border-radius:6px;padding:3px 9px;cursor:pointer;font-size:12px;">Close</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">${chipsHtml || '<span style="color:#9aa7b8;font-size:12px;">No mapped items.</span>'}</div>
+  `;
+  draw();
+}
+
+function formatClickableIngredients(ingText) {
+  const raw = String(ingText || "").trim();
+  if (!raw || raw === "Base / Special") {
+    return `<span class="ing-muted">${raw || "Base / Special"}</span>`;
+  }
+  return raw.split(/\s*\+\s*/).map(part => {
+    const isTag = /\(tag\)\s*$/i.test(part.trim());
+    const cleanName = cleanIngredientName(part);
+    if (isTag) {
+      const tagEntry = resolveTagEntries(cleanName);
+      const countLabel = tagEntry ? `${tagEntry.items.length} items` : "Tag";
+      const encTag = encodeURIComponent(cleanName);
+      return `<span class="ing-link" style="color:#f59f00;" title="Filter by ${cleanName} (${countLabel})" onclick="openTagItems('${encTag}')">${part}</span>`;
+    }
+    const hasMatch = !!findRecipeTargetByName(cleanName);
+    if (!hasMatch) return `<span class="ing-muted">${part}</span>`;
+    const enc = encodeURIComponent(cleanName);
+    return `<span class="ing-link" title="Jump to item ${cleanName}" onclick="jumpToIngredient('${enc}')">${part}</span>`;
+  }).join(' <span class="ing-muted">+</span> ');
+}
+
+const qElInit = document.getElementById("q");
+if (qElInit) {
+  qElInit.addEventListener("input", () => {
+    const curQ = normalizeItemKey(qElInit.value);
+    if (window.__EXACT_ITEM_FILTER__ && curQ !== window.__EXACT_ITEM_FILTER__.exactLower) {
+      window.__EXACT_ITEM_FILTER__ = null;
+    }
+    if (window.__ACTIVE_TAG_FILTER__ && curQ !== normalizeItemKey(window.__ACTIVE_TAG_FILTER__.label)) {
+      window.__ACTIVE_TAG_FILTER__ = null;
+    }
+  });
+}
+</script>
+
+<script>
+(function() {
+  const SERVER_SLOTS_KEY = 'ecopricing_server_slots_v1';
+  const LEGACY_SHOP_KEY = 'ecopricing_shop_list_v1';
+  const MAX_SERVERS = 3;
+  const MAX_SERVER_NAME_LEN = 20;
+
+  function loadLegacyShop() {
+    try {
+      const raw = localStorage.getItem(LEGACY_SHOP_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr.map(x => String(x || '').trim()).filter(Boolean) : [];
+    } catch (_e) {
+      return [];
+    }
+  }
+
+  function defaultState() {
+    return {
+      activeId: 'srv_1',
+      servers: [
+        { id: 'srv_1', name: 'Server 1', costs: {}, shop: loadLegacyShop() }
+      ]
+    };
+  }
+
+  function loadState() {
+    const fallbackShop = loadLegacyShop();
+    try {
+      const raw = localStorage.getItem(SERVER_SLOTS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.servers) && parsed.servers.length) {
+          parsed.servers = parsed.servers.slice(0, MAX_SERVERS).map((s, idx) => ({
+            id: s.id || ('srv_' + (idx + 1)),
+            name: String(s.name || ('Server ' + (idx + 1))).trim().slice(0, MAX_SERVER_NAME_LEN) || ('Server ' + (idx + 1)),
+            costs: (s.costs && typeof s.costs === 'object') ? s.costs : {},
+            shop: Array.isArray(s.shop) ? s.shop.map(x => String(x || '').trim()).filter(Boolean) : (idx === 0 ? fallbackShop.slice() : [])
+          }));
+          if (!parsed.servers.some(s => s.id === parsed.activeId)) {
+            parsed.activeId = parsed.servers[0].id;
+          }
+          return parsed;
+        }
+      }
+    } catch (_e) {}
+    return defaultState();
+  }
+
+  let state = loadState();
+
+  function saveState() {
+    try {
+      localStorage.setItem(SERVER_SLOTS_KEY, JSON.stringify(state));
+    } catch (_e) {}
+  }
+
+  function activeServer() {
+    return state.servers.find(s => s.id === state.activeId) || state.servers[0];
+  }
+
+  function syncMapFromActive() {
+    const srv = activeServer();
+    if (!(window.__CUSTOM_COSTS__ instanceof Map)) {
+      window.__CUSTOM_COSTS__ = new Map();
+    }
+    window.__CUSTOM_COSTS__.clear();
+    const obj = (srv && srv.costs && typeof srv.costs === 'object') ? srv.costs : {};
+    Object.keys(obj).forEach(k => {
+      const num = parseFloat(obj[k]);
+      if (k && Number.isFinite(num)) {
+        window.__CUSTOM_COSTS__.set(normalizeItemKey(k), num);
+      }
+    });
+  }
+
+  function syncMapToActive() {
+    const srv = activeServer();
+    if (!srv) return;
+    const next = {};
+    if (window.__CUSTOM_COSTS__ instanceof Map) {
+      window.__CUSTOM_COSTS__.forEach((v, k) => {
+        if (k && Number.isFinite(Number(v))) {
+          next[normalizeItemKey(k)] = Number(v);
+        }
+      });
+    }
+    srv.costs = next;
+    saveState();
+  }
+
+  function getActiveShopList() {
+    const srv = activeServer();
+    if (!srv) return [];
+    if (!Array.isArray(srv.shop)) srv.shop = [];
+    return srv.shop.slice();
+  }
+
+  function setActiveShopList(arr) {
+    const srv = activeServer();
+    if (!srv) return;
+    srv.shop = Array.isArray(arr) ? arr.map(x => String(x || '').trim()).filter(Boolean) : [];
+    saveState();
+  }
+
+  window.__persistActiveServerCosts = syncMapToActive;
+  window.__getActiveServerShop = getActiveShopList;
+  window.__setActiveServerShop = setActiveShopList;
+
+  function ensureBarAndBack() {
+    const bar = document.getElementById('server-bar');
+    const ctrlBar = document.getElementById('server-controls-bar');
+    const controls = document.querySelector('.panel-head .controls') || document.querySelector('.controls');
+    if (controls && !document.getElementById('btn-recipe-back')) {
+      const backBtn = document.createElement('button');
+      backBtn.type = 'button';
+      backBtn.id = 'btn-recipe-back';
+      backBtn.textContent = '← Back';
+      backBtn.disabled = true;
+      controls.insertBefore(backBtn, controls.firstChild);
+    }
+    return { bar, ctrlBar };
+  }
+
+  function renderExactServerBar() {
+    const { bar, ctrlBar } = ensureBarAndBack();
+    if (!bar || !ctrlBar) return;
+
+    const curSrv = activeServer();
+    bar.innerHTML = '';
+    ctrlBar.innerHTML = '';
+
+    state.servers.forEach(srv => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'srv-tab' + (srv.id === state.activeId ? ' active' : '');
+      btn.textContent = srv.name;
+      btn.addEventListener('click', () => {
+        if (srv.id === state.activeId) {
+          renderExactServerBar();
+          return;
+        }
+        syncMapToActive();
+        state.activeId = srv.id;
+        saveState();
+        syncMapFromActive();
+        if (typeof window.__reloadShopFromActiveServer === 'function') {
+          window.__reloadShopFromActiveServer();
+        }
+        renderExactServerBar();
+        if (typeof draw === 'function') draw();
+      });
+      bar.appendChild(btn);
+    });
+
+    if (state.servers.length < MAX_SERVERS) {
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'srv-ghost-add';
+      addBtn.textContent = '+ Add Server';
+      addBtn.addEventListener('click', () => {
+        if (state.servers.length >= MAX_SERVERS) return;
+        syncMapToActive();
+        const newId = 'srv_' + Date.now();
+        const newName = `Server ${state.servers.length + 1}`;
+        state.servers.push({ id: newId, name: newName, costs: {}, shop: [] });
+        state.activeId = newId;
+        saveState();
+        syncMapFromActive();
+        if (typeof window.__reloadShopFromActiveServer === 'function') {
+          window.__reloadShopFromActiveServer();
+        }
+        renderExactServerBar();
+        const inp = ctrlBar.querySelector('.srv-rename-input');
+        if (inp) {
+          inp.focus();
+          inp.select();
+        }
+        if (typeof draw === 'function') draw();
+      });
+      bar.appendChild(addBtn);
+    }
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'srv-rename-input';
+    nameInput.maxLength = MAX_SERVER_NAME_LEN;
+    nameInput.setAttribute('maxlength', String(MAX_SERVER_NAME_LEN));
+    nameInput.value = curSrv ? curSrv.name.slice(0, MAX_SERVER_NAME_LEN) : '';
+    nameInput.setAttribute('aria-label', 'Server Name');
+    nameInput.placeholder = 'Server name...';
+    ctrlBar.appendChild(nameInput);
+
+    const applyRename = () => {
+      if (!curSrv) return;
+      const trimmed = (nameInput.value || '').trim().slice(0, MAX_SERVER_NAME_LEN);
+      if (!trimmed) {
+        nameInput.value = curSrv.name;
+        return;
+      }
+      curSrv.name = trimmed;
+      saveState();
+      renderExactServerBar();
+    };
+
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') applyRename();
+    });
+
+    const renameBtn = document.createElement('button');
+    renameBtn.type = 'button';
+    renameBtn.className = 'srv-action-btn';
+    renameBtn.textContent = 'Rename';
+    renameBtn.addEventListener('click', applyRename);
+    ctrlBar.appendChild(renameBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'srv-delete-btn';
+    delBtn.textContent = 'Delete';
+    delBtn.addEventListener('click', () => {
+      if (!curSrv) return;
+      if (state.servers.length === 1) {
+        if (!window.confirm(`Reset "${curSrv.name}" prices, shop, and name?`)) return;
+        curSrv.name = 'Server 1';
+        curSrv.costs = {};
+        curSrv.shop = [];
+      } else {
+        if (!window.confirm(`Delete "${curSrv.name}"?`)) return;
+        state.servers = state.servers.filter(s => s.id !== curSrv.id);
+        state.activeId = state.servers[0].id;
+      }
+      saveState();
+      syncMapFromActive();
+      if (typeof window.__reloadShopFromActiveServer === 'function') {
+        window.__reloadShopFromActiveServer();
+      }
+      renderExactServerBar();
+      if (typeof draw === 'function') draw();
+    });
+    ctrlBar.appendChild(delBtn);
+  }
+
+  window.renderExactServerBar = renderExactServerBar;
+
+  syncMapFromActive();
+  renderExactServerBar();
+  if (typeof draw === 'function') draw();
+
+  window.addEventListener('load', () => {
+    state = loadState();
+    syncMapFromActive();
+    if (typeof window.__reloadShopFromActiveServer === 'function') {
+      window.__reloadShopFromActiveServer();
+    }
+    renderExactServerBar();
+    if (typeof draw === 'function') draw();
+  });
+})();
+</script>
+
+<script>
+(function(){
+  let shopSet = new Set(typeof window.__getActiveServerShop === 'function' ? window.__getActiveServerShop() : []);
+  let shopOnlyMode = false;
+  let scheduled = false;
+
+  const norm = v => String(v || '').trim().toLowerCase();
+  function hasKey(k){
+    const n = norm(k);
+    if (!n) return false;
+    if (shopSet.has(k)) return true;
+    for (const x of shopSet) if (norm(x) === n) return true;
+    return false;
+  }
+  function addKey(k){ const c = String(k || '').trim(); if (c) shopSet.add(c); }
+  function delKey(k){ const n = norm(k); for (const x of [...shopSet]) if (x === k || norm(x) === n) shopSet.delete(x); }
+  function saveShop(){
+    if (typeof window.__setActiveServerShop === 'function') {
+      window.__setActiveServerShop([...shopSet]);
+    }
+    syncUI();
+  }
+  function reloadShop(){
+    const list = typeof window.__getActiveServerShop === 'function' ? window.__getActiveServerShop() : [];
+    shopSet = new Set(list);
+    syncUI();
+  }
+  window.__reloadShopFromActiveServer = reloadShop;
+
+  function rowName(tr){
+    const c = tr.querySelector('td');
+    if (!c) return '';
+    const el = c.querySelector('strong,b,.item-name,a,span');
+    return String(((el && el.textContent.trim()) ? el.textContent : c.textContent) || '').trim().split('\n')[0].trim();
+  }
+  function applyFilter(){
+    document.querySelectorAll('#rows tr').forEach(tr => {
+      tr.classList.toggle('shop-filtered-hidden', shopOnlyMode && !hasKey(rowName(tr)));
+    });
+    if (typeof refreshTelemetryChips === 'function') refreshTelemetryChips();
+  }
+  function syncUI(){
+    document.querySelectorAll('.shop-col-btn').forEach(btn => {
+      const on = hasKey(btn.dataset.key);
+      btn.classList.toggle('in-shop', on);
+      btn.textContent = on ? '✓' : '✕';
+      btn.title = on ? 'In SHOP list (click to remove)' : 'Not in shop (click to add)';
+    });
+    const nav = document.getElementById('shop-nav-btn');
+    if (nav){
+      nav.classList.toggle('active', shopOnlyMode);
+      nav.title = shopOnlyMode ? 'Showing SHOP items (click to show all)' : 'Show SHOP items';
+    }
+    applyFilter();
+  }
+  function decorate(){
+    scheduled = false;
+    const tbl = document.querySelector('#rows') && document.querySelector('#rows').closest('table');
+    const headRow = tbl && tbl.querySelector('thead tr');
+    if (headRow && !headRow.querySelector('.th-shop-col')){
+      const th = document.createElement('th');
+      th.className = 'th-shop-col';
+      th.textContent = 'Selling in shop';
+      headRow.appendChild(th);
+    }
+    const existingNav = document.getElementById('shop-nav-btn');
+    if (existingNav && !existingNav.dataset.wired) {
+      existingNav.dataset.wired = '1';
+      existingNav.onclick = e => { e.preventDefault(); e.stopPropagation(); shopOnlyMode = !shopOnlyMode; syncUI(); };
+    }
+    document.querySelectorAll('#rows tr').forEach(tr => {
+      if (tr.querySelector('.td-shop-col')) return;
+      const key = rowName(tr);
+      if (!key) return;
+      const td = document.createElement('td');
+      td.className = 'td-shop-col';
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'shop-col-btn';
+      b.textContent = '✕';
+      b.dataset.key = key;
+      b.onclick = e => { e.preventDefault(); e.stopPropagation(); hasKey(key) ? delKey(key) : addKey(key); saveShop(); };
+      td.appendChild(b);
+      tr.appendChild(td);
+    });
+    syncUI();
+  }
+  function queue(){ if (!scheduled){ scheduled = true; requestAnimationFrame(decorate); } }
+  function bootShop(){
+    reloadShop();
+    decorate();
+    const rowsEl = document.getElementById('rows');
+    if (rowsEl) new MutationObserver(queue).observe(rowsEl, { childList: true, subtree: true, characterData: true });
+    new MutationObserver(queue).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootShop); else bootShop();
+})();
+</script>
+
+<script>
+(function(){
+  const navStack = [];
+  let restoring = false;
+
+  function captureSnapshot() {
+    const qEl = document.getElementById('q');
+    return {
+      cur: typeof cur !== 'undefined' ? cur : 'carpenter',
+      profKey: typeof currentProfKey !== 'undefined' ? currentProfKey : (typeof cur !== 'undefined' ? cur : 'carpenter'),
+      subKey: typeof activeSubKey !== 'undefined' ? activeSubKey : null,
+      subLevel: typeof activeSubLevel !== 'undefined' ? activeSubLevel : null,
+      q: qEl ? qEl.value : '',
+      exactItem: window.__EXACT_ITEM_FILTER__ ? { ...window.__EXACT_ITEM_FILTER__ } : null,
+      activeTag: window.__ACTIVE_TAG_FILTER__
+        ? { label: window.__ACTIVE_TAG_FILTER__.label, namesLower: new Set(window.__ACTIVE_TAG_FILTER__.namesLower) }
+        : null
+    };
+  }
+
+  function sameSnapshot(a, b) {
+    if (!a || !b) return false;
+    return a.cur === b.cur
+      && a.profKey === b.profKey
+      && a.subKey === b.subKey
+      && a.subLevel === b.subLevel
+      && a.q === b.q
+      && ((a.exactItem && a.exactItem.exactLower) || null) === ((b.exactItem && b.exactItem.exactLower) || null)
+      && ((a.activeTag && a.activeTag.label) || null) === ((b.activeTag && b.activeTag.label) || null);
+  }
+
+  function syncBackBtn() {
+    const btn = document.getElementById('btn-recipe-back');
+    if (btn) btn.disabled = navStack.length === 0;
+  }
+
+  function recordSnapshot() {
+    if (restoring) return;
+    const snap = captureSnapshot();
+    const prev = navStack[navStack.length - 1];
+    if (!sameSnapshot(prev, snap)) {
+      navStack.push(snap);
+      if (navStack.length > 50) navStack.shift();
+      syncBackBtn();
+    }
+  }
+
+  window.__recordNavSnapshot = recordSnapshot;
+
+  function applySnapshot(snap) {
+    if (!snap) return;
+    restoring = true;
+    try {
+      if (typeof closeTagInspector === 'function') closeTagInspector();
+
+      const targetProf = snap.profKey || snap.cur || 'carpenter';
+      if (fullDbItems[targetProf]) {
+        DB[targetProf].items = fullDbItems[targetProf].slice();
+      }
+
+      cur = snap.cur || targetProf;
+      currentProfKey = targetProf;
+      activeSubKey = snap.subKey !== undefined ? snap.subKey : null;
+      activeSubLevel = snap.subLevel !== undefined ? snap.subLevel : null;
+
+      if (cur === 'base_items') {
+        if (Array.isArray(window.BASE_ITEMS) && window.BASE_ITEMS.length && !DB.base_items) {
+          DB.base_items = { title: "Base Items — Raw & Harvested Materials", items: window.BASE_ITEMS };
+        }
+        setArtisanSelection(null);
+      } else {
+        setArtisanSelection(targetProf);
+      }
+
+      const qEl = document.getElementById('q');
+      if (qEl) qEl.value = snap.q || '';
+
+      window.__EXACT_ITEM_FILTER__ = snap.exactItem ? { ...snap.exactItem } : null;
+      window.__ACTIVE_TAG_FILTER__ = snap.activeTag
+        ? { label: snap.activeTag.label, namesLower: new Set(snap.activeTag.namesLower) }
+        : null;
+
+      if (activeSubKey !== null || activeSubLevel !== null) {
+        applySubFilter(targetProf, true);
+      } else {
+        if (typeof renderSubPills === 'function') renderSubPills(targetProf);
+        if (typeof draw === 'function') draw();
+      }
+    } finally {
+      restoring = false;
+      syncBackBtn();
+    }
+  }
+
+  document.addEventListener('click', (ev) => {
+    const btn = ev.target && ev.target.closest ? ev.target.closest('#btn-recipe-back') : null;
+    if (!btn) return;
+    ev.preventDefault();
+    if (!navStack.length) return;
+    const prevSnap = navStack.pop();
+    applySnapshot(prevSnap);
+  });
+
+  window.addEventListener('DOMContentLoaded', syncBackBtn);
+  syncBackBtn();
+})();
+</script>
+</body>
+</html>
